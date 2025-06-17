@@ -6,6 +6,7 @@
     <title>Data Customer Biznet Branch Kalianda</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
@@ -13,6 +14,9 @@
         <div class="container d-flex justify-content-between align-items-center">
             <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="app-logo"> 
             <h1 class="app-title">Data Customer Biznet Branch Kalianda</h1>
+            <button id="toggleDashboardBtn" class="btn btn-outline-light toggle-dashboard-btn" title="Toggle Dashboard Analytics">
+                <i class="fas fa-chart-bar"></i>
+            </button>
         </div>
     </header>
 
@@ -48,6 +52,33 @@
         
         <div id="customerCount" class="alert alert-info text-center"></div>
 
+        <div class="container mt-5 dashboard-section d-none" id="customerDashboardSection">
+            <h2 class="section-title">Analisis Data Customer</h2>
+
+            <div class="card p-4 shadow-sm mb-4">
+                <h3 class="card-title">Status Customer per Sales Code</h3>
+                <div id="salesCodeStatusDashboard" class="row">
+                    <p class="text-muted text-center col-12">Memuat data analisis status...</p>
+                </div>
+            </div>
+
+            <div class="card p-4 shadow-sm mb-4">
+                <h3 class="card-title">Distribusi Customer per Sales Code (Berdasarkan Kecamatan)</h3>
+                <div id="salesCodeSubdistrictDashboard" class="row">
+                    <p class="text-muted text-center col-12">Memuat data analisis kecamatan...</p>
+                </div>
+            </div>
+
+            <div class="card p-4 shadow-sm mb-4">
+                <h3 class="card-title">Customer Baru per Bulan (per Sales Code)</h3>
+                <div id="monthlyNewCustomersDashboard" class="row">
+                    <div class="col-12 chart-card-lg"> 
+                        <canvas id="monthlySalesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
         <div class="table-responsive app-table-container">
             <table id="customerTable" class="table table-striped table-bordered table-hover">
                 <thead class="thead-dark">
@@ -124,6 +155,43 @@
         </div>
     </div>
 
+    <div class="modal fade" id="monthlyCustomerDetailModal" tabindex="-1" aria-labelledby="monthlyCustomerDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="monthlyCustomerDetailModalLabel">Detail Customer Baru</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="monthlyDetailTitle" class="text-center mb-3"></h6>
+                    <div class="table-responsive">
+                        <table id="monthlyCustomerDetailTable" class="table table-striped table-bordered table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>BUSINESSPARTNERID</th>
+                                    <th>BP_FULLNAME</th>
+                                    <th>BP_EMAIL</th>
+                                    <th>BP_PHONE</th>
+                                    <th>CONTRACTSTARTDATE</th>
+                                    <th>SALESCODE</th>
+                                    <th>STATUS</th>
+                                    <th>SUBDISTRICT_INST</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -133,6 +201,9 @@
         const webAppUrl = 'https://script.google.com/macros/s/AKfycbyPq6xvW3e3FoHozo2M0ZW3ScgNVvRs4ZYNVM44L54ZvTPn94KGlngdyAxwIQMbYhU_Lw/exec'; 
         let allCustomerData = []; 
         let filteredCustomerData = []; 
+        let salesCodeCharts = {}; 
+        let subdistrictCharts = {};
+        let monthlySalesChartInstance = null; 
 
         async function fetchCustomerData() {
             const tableBody = document.getElementById('customerTable').getElementsByTagName('tbody')[0];
@@ -142,6 +213,12 @@
             tableBody.innerHTML = '<tr><td colspan="39" class="text-center"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div> Memuat data customer...</td></tr>';
             errorMessageDiv.classList.add('d-none'); 
             customerCountDiv.textContent = 'Memuat jumlah customer...'; 
+
+            // Clear dashboards while loading
+            document.getElementById('salesCodeStatusDashboard').innerHTML = '<p class="text-muted text-center col-12">Memuat data analisis status...</p>';
+            document.getElementById('salesCodeSubdistrictDashboard').innerHTML = '<p class="text-muted text-center col-12">Memuat data analisis kecamatan...</p>';
+            document.getElementById('monthlyNewCustomersDashboard').innerHTML = '<div class="col-12 chart-card-lg"><p class="text-muted text-center">Memuat data analisis penjualan bulanan...</p></div>';
+
 
             try {
                 const response = await fetch(webAppUrl);
@@ -157,6 +234,11 @@
                 allCustomerData = data; 
                 populateFilters(allCustomerData); 
                 applyFiltersAndSearch(); 
+                
+                // Panggil fungsi-fungsi dashboard setelah data termuat
+                renderSalesCodeStatusDashboard(allCustomerData);
+                renderSalesCodeSubdistrictDashboard(allCustomerData);
+                renderMonthlySalesChart(allCustomerData); 
 
                 errorMessageDiv.classList.add('d-none'); 
             } catch (error) {
@@ -165,6 +247,12 @@
                 errorMessageDiv.textContent = `Gagal memuat data: ${error.message}. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.`;
                 errorMessageDiv.classList.remove('d-none'); 
                 customerCountDiv.textContent = 'Gagal memuat jumlah customer.'; 
+                
+                // Clear dashboards on error
+                document.getElementById('salesCodeStatusDashboard').innerHTML = '<p class="text-danger text-center col-12">Gagal memuat data analisis status.</p>';
+                document.getElementById('salesCodeSubdistrictDashboard').innerHTML = '<p class="text-danger text-center col-12">Gagal memuat data analisis kecamatan.</p>';
+                document.getElementById('monthlyNewCustomersDashboard').innerHTML = '<div class="col-12 chart-card-lg"><p class="text-danger text-center">Gagal memuat data analisis penjualan bulanan.</p></div>';
+
             }
         }
 
@@ -251,7 +339,7 @@
                             const date = new Date(customer[header]);
                             cell.textContent = date.toLocaleDateString('id-ID'); 
                         } catch (e) {
-                            cell.textContent = customer[header]; 
+                            cell.textContent = customer[header] ?? ''; 
                         }
                     } else {
                         cell.textContent = customer[header] ?? ''; 
@@ -274,6 +362,7 @@
             const contractAccount = customer.CONTRACTACCOUNT || '';
             const bpFullName = customer.BP_FULLNAME || 'Tidak Diketahui';
             let expiredDate = customer.EXPIREDDATE;
+            const bundleName = customer.BUNDLE_NAME || ''; // Get BUNDLE_NAME
 
             if (expiredDate) {
                 try {
@@ -286,19 +375,42 @@
                 expiredDate = 'Tidak Diketahui';
             }
 
-            vaContentToCapture.innerHTML = `
-                <div class="va-card">
-                    <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="va-biznet-logo"> 
-                    <p class="va-title">Berikut nomor Virtual Account Pembayarannya:</p>
-                    <p class="va-customer-info"><strong>Nama Customer:</strong> ${bpFullName}</p>
-                    <p class="va-customer-info"><strong>Masa aktif sampai:</strong> ${expiredDate}</p>
-                    <hr>
-                    <p class="va-bank"><strong>Bank Permata Virtual Account:</strong> <br><code>899300-${contractAccount}</code></p>
-                    <p class="va-bank"><strong>Bank BCA Virtual Account:</strong> <br><code>711170-${contractAccount}</code></p>
-                    <p class="va-bank"><strong>Bank Mandiri Virtual Account:</strong> <br><code>895911-${contractAccount}</code></p>
-                    <p class="va-other-methods"><strong>MBanking UOB / Indomaret / Alfamart / Alfamidi / CK / GoPay / Tokopedia / BRIMO / DANA:</strong> <br>Billing ID: <code>${contractAccount}</code></p>
-                </div>
-            `;
+            let vaContentHtml = '';
+
+            // Check if BUNDLE_NAME contains "Metronet" (case-insensitive)
+            if (bundleName.toLowerCase().includes('metronet')) {
+                vaContentHtml = `
+                    <div class="va-card">
+                        <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="va-biznet-logo"> 
+                        <p class="va-title">Pembayaran melalui Virtual Account</p>
+                        <p class="va-title">Payment via Virtual Account</p>
+                        <p class="va-customer-info"><strong>Nama Customer:</strong> ${bpFullName}</p>
+                        <p class="va-customer-info"><strong>Masa aktif sampai:</strong> ${expiredDate}</p>
+                        <hr>
+                        <p class="va-bank"><strong>BCA:</strong> <br><code>711160-${contractAccount}</code></p>
+                        <p class="va-bank"><strong>Bank Permata:</strong> <br><code>883100-${contractAccount}</code></p>
+                        <p class="va-bank"><strong>Bank Mandiri:</strong> <br><code>895912-${contractAccount}</code></p>
+                        <p class="va-bank"><strong>OCBC:</strong> <br><code>903022-${contractAccount}</code></p>
+                    </div>
+                `;
+            } else {
+                // Default VA info for non-Metronet bundles
+                vaContentHtml = `
+                    <div class="va-card">
+                        <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="va-biznet-logo"> 
+                        <p class="va-title">Berikut nomor Virtual Account Pembayarannya:</p>
+                        <p class="va-customer-info"><strong>Nama Customer:</strong> ${bpFullName}</p>
+                        <p class="va-customer-info"><strong>Masa aktif sampai:</strong> ${expiredDate}</p>
+                        <hr>
+                        <p class="va-bank"><strong>Bank Permata Virtual Account:</strong> <br><code>899300-${contractAccount}</code></p>
+                        <p class="va-bank"><strong>Bank BCA Virtual Account:</strong> <br><code>711170-${contractAccount}</code></p>
+                        <p class="va-bank"><strong>Bank Mandiri Virtual Account:</strong> <br><code>895911-${contractAccount}</code></p>
+                        <p class="va-other-methods"><strong>MBanking UOB / Indomaret / Alfamart / Alfamidi / CK / GoPay / Tokopedia / BRIMO / DANA:</strong> <br>Billing ID: <code>${contractAccount}</code></p>
+                    </div>
+                `;
+            }
+
+            vaContentToCapture.innerHTML = vaContentHtml;
             $('#vaModal').modal('show'); 
         }
 
@@ -325,6 +437,361 @@
             });
         });
 
+        // ===========================================
+        // DASHBOARD JAVASCRIPT FUNCTIONS START
+        // ===========================================
+
+        function renderSalesCodeStatusDashboard(data) {
+            const dashboardDiv = document.getElementById('salesCodeStatusDashboard');
+            dashboardDiv.innerHTML = ''; 
+
+            const statusCounts = {}; 
+
+            data.forEach(customer => {
+                const salesCode = customer.SALESCODE || 'Unknown Sales Code';
+                const status = customer.STATUS || 'Unknown Status';
+
+                if (!statusCounts[salesCode]) {
+                    statusCounts[salesCode] = {};
+                }
+                statusCounts[salesCode][status] = (statusCounts[salesCode][status] || 0) + 1;
+            });
+
+            const sortedSalesCodes = Object.keys(statusCounts).sort();
+
+            if (sortedSalesCodes.length === 0) {
+                dashboardDiv.innerHTML = '<p class="text-muted text-center col-12">Tidak ada data Sales Code untuk analisis status.</p>';
+                return;
+            }
+
+            for (const key in salesCodeCharts) {
+                if (salesCodeCharts[key]) {
+                    salesCodeCharts[key].destroy();
+                }
+            }
+            salesCodeCharts = {};
+
+            sortedSalesCodes.forEach(salesCode => {
+                const salesCodeData = statusCounts[salesCode];
+                const labels = Object.keys(salesCodeData).sort(); 
+                const counts = labels.map(label => salesCodeData[label]);
+
+                const totalCustomers = counts.reduce((sum, current) => sum + current, 0);
+                if (totalCustomers === 0) return; 
+
+                const chartContainer = document.createElement('div');
+                chartContainer.className = 'col-lg-4 col-md-6 col-sm-12 mb-4'; 
+                chartContainer.innerHTML = `<div class="chart-card card p-3">
+                                                <h5 class="card-title text-center mb-3">Sales Code: ${salesCode} (${totalCustomers} Customer)</h5>
+                                                <canvas id="statusChart_${salesCode}"></canvas>
+                                            </div>`;
+                dashboardDiv.appendChild(chartContainer);
+
+                const ctx = document.getElementById(`statusChart_${salesCode}`).getContext('2d');
+                
+                const backgroundColors = labels.map(label => {
+                    switch(label.toLowerCase()) {
+                        case 'active': return '#28a745'; 
+                        case 'terminated': return '#dc3545'; 
+                        case 'suspended': return '#ffc107'; 
+                        default: return '#6c757d'; 
+                    }
+                });
+
+                salesCodeCharts[salesCode] = new Chart(ctx, {
+                    type: 'doughnut', 
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: backgroundColors,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 15,
+                                    padding: 10
+                                }
+                            },
+                            title: {
+                                display: false, 
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        let label = tooltipItem.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += tooltipItem.raw + ' (' + ((tooltipItem.raw / totalCustomers) * 100).toFixed(2) + '%)';
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function renderSalesCodeSubdistrictDashboard(data) {
+            const dashboardDiv = document.getElementById('salesCodeSubdistrictDashboard');
+            dashboardDiv.innerHTML = ''; 
+
+            const subdistrictCounts = {}; 
+
+            data.forEach(customer => {
+                const salesCode = customer.SALESCODE || 'Unknown Sales Code';
+                const subdistrict = customer.SUBDISTRICT_INST || 'Unknown Subdistrict';
+
+                if (!subdistrictCounts[salesCode]) {
+                    subdistrictCounts[salesCode] = {};
+                }
+                subdistrictCounts[salesCode][subdistrict] = (subdistrictCounts[salesCode][subdistrict] || 0) + 1;
+            });
+
+            const sortedSalesCodes = Object.keys(subdistrictCounts).sort();
+
+            if (sortedSalesCodes.length === 0) {
+                dashboardDiv.innerHTML = '<p class="text-muted text-center col-12">Tidak ada data Sales Code untuk analisis kecamatan.</p>';
+                return;
+            }
+
+            for (const key in subdistrictCharts) {
+                if (subdistrictCharts[key]) {
+                    subdistrictCharts[key].destroy();
+                }
+            }
+            subdistrictCharts = {};
+
+            sortedSalesCodes.forEach(salesCode => {
+                const salesCodeData = subdistrictCounts[salesCode];
+                const sortedSubdistricts = Object.entries(salesCodeData)
+                                                .sort(([,countA], [,countB]) => countB - countA) 
+                                                .slice(0, 10); 
+
+                if (sortedSubdistricts.length === 0) return; 
+
+                const labels = sortedSubdistricts.map(entry => entry[0]);
+                const counts = sortedSubdistricts.map(entry => entry[1]);
+
+                const chartContainer = document.createElement('div');
+                chartContainer.className = 'col-lg-6 col-md-12 mb-4'; 
+                chartContainer.innerHTML = `<div class="chart-card card p-3">
+                                                <h5 class="card-title text-center mb-3">Sales Code: ${salesCode} - Top 10 Kecamatan</h5>
+                                                <canvas id="subdistrictChart_${salesCode}"></canvas>
+                                            </div>`;
+                dashboardDiv.appendChild(chartContainer);
+
+                const ctx = document.getElementById(`subdistrictChart_${salesCode}`).getContext('2d');
+                
+                subdistrictCharts[salesCode] = new Chart(ctx, {
+                    type: 'bar', 
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Jumlah Customer',
+                            data: counts,
+                            backgroundColor: 'rgba(0, 123, 255, 0.7)', 
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y', 
+                        plugins: {
+                            legend: {
+                                display: false, 
+                            },
+                            title: {
+                                display: false, 
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0 
+                                }
+                            },
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function renderMonthlySalesChart(data) {
+            const dashboardDiv = document.getElementById('monthlyNewCustomersDashboard');
+            dashboardDiv.innerHTML = '<div class="col-12 chart-card-lg"><canvas id="monthlySalesChart"></canvas></div>'; 
+
+            const monthlySales = {}; 
+            const salesCodes = new Set();
+
+            data.forEach(customer => {
+                const contractStartDate = customer.CONTRACTSTARTDATE;
+                const salesCode = customer.SALESCODE || 'Unknown Sales Code';
+
+                if (contractStartDate) {
+                    try {
+                        const date = new Date(contractStartDate);
+                        const year = date.getFullYear();
+                        const month = date.getMonth() + 1; 
+                        const monthKey = `${year}-${String(month).padStart(2, '0')}`; 
+
+                        if (!monthlySales[monthKey]) {
+                            monthlySales[monthKey] = {};
+                        }
+                        monthlySales[monthKey][salesCode] = (monthlySales[monthKey][salesCode] || 0) + 1;
+                        salesCodes.add(salesCode);
+                    } catch (e) {
+                        console.warn('Invalid CONTRACTSTARTDATE format:', contractStartDate, e);
+                    }
+                }
+            });
+
+            const sortedMonths = Object.keys(monthlySales).sort();
+            const sortedSalesCodes = Array.from(salesCodes).sort();
+
+            if (sortedMonths.length === 0 || sortedSalesCodes.length === 0) {
+                dashboardDiv.innerHTML = '<div class="col-12 chart-card-lg"><p class="text-muted text-center">Tidak ada data penjualan bulanan.</p></div>';
+                return;
+            }
+
+            if (monthlySalesChartInstance) {
+                monthlySalesChartInstance.destroy();
+            }
+
+            const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+            const datasets = [];
+
+            const generateColor = (index) => {
+                const colors = [
+                    '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8', '#fd7e14', '#e83e8c', '#6c757d', '#20c997'
+                ];
+                return colors[index % colors.length];
+            };
+
+            sortedSalesCodes.forEach((salesCode, index) => {
+                const dataPoints = sortedMonths.map(month => monthlySales[month][salesCode] || 0);
+                const color = generateColor(index);
+                datasets.push({
+                    label: salesCode,
+                    data: dataPoints,
+                    borderColor: color,
+                    backgroundColor: color + '40', 
+                    fill: false,
+                    tension: 0.1, 
+                    borderWidth: 2
+                });
+            });
+
+            monthlySalesChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false, 
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Bulan'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Jumlah Customer Baru'
+                            },
+                            ticks: {
+                                precision: 0 
+                            }
+                        }
+                    },
+                    onClick: (evt, element) => {
+                        if (element.length > 0) {
+                            const datasetIndex = element[0].datasetIndex;
+                            const index = element[0].index;
+                            const labelMonth = monthlySalesChartInstance.data.labels[index];
+                            const salesCodeClicked = monthlySalesChartInstance.data.datasets[datasetIndex].label;
+                            showMonthlyCustomerDetails(labelMonth, salesCodeClicked);
+                        }
+                    }
+                }
+            });
+        }
+
+        function showMonthlyCustomerDetails(monthYear, salesCode) {
+            const [year, month] = monthYear.split('-');
+            const monthName = new Date(year, parseInt(month) - 1, 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+
+            document.getElementById('monthlyDetailTitle').textContent = `Customer Baru untuk Sales Code: ${salesCode} di Bulan ${monthName}`;
+            const detailTableBody = document.getElementById('monthlyCustomerDetailTable').getElementsByTagName('tbody')[0];
+            detailTableBody.innerHTML = ''; 
+
+            const filteredDetails = allCustomerData.filter(customer => {
+                if (!customer.CONTRACTSTARTDATE || !customer.SALESCODE) return false;
+
+                try {
+                    const date = new Date(customer.CONTRACTSTARTDATE);
+                    const customerMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    return customerMonthKey === monthYear && customer.SALESCODE === salesCode;
+                } catch (e) {
+                    return false;
+                }
+            });
+
+            if (filteredDetails.length === 0) {
+                detailTableBody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada customer ditemukan untuk kriteria ini.</td></tr>';
+            } else {
+                filteredDetails.forEach(customer => {
+                    let row = detailTableBody.insertRow();
+                    row.insertCell().textContent = customer.BUSINESSPARTNERID ?? '';
+                    row.insertCell().textContent = customer.BP_FULLNAME ?? '';
+                    row.insertCell().textContent = customer.BP_EMAIL ?? '';
+                    row.insertCell().textContent = customer.BP_PHONE ?? '';
+                    row.insertCell().textContent = customer.CONTRACTSTARTDATE ? new Date(customer.CONTRACTSTARTDATE).toLocaleDateString('id-ID') : '';
+                    row.insertCell().textContent = customer.SALESCODE ?? '';
+                    row.insertCell().textContent = customer.STATUS ?? '';
+                    row.insertCell().textContent = customer.SUBDISTRICT_INST ?? '';
+                });
+            }
+
+            $('#monthlyCustomerDetailModal').modal('show');
+        }
+
+        // ===========================================
+        // DASHBOARD JAVASCRIPT FUNCTIONS END
+        // ===========================================
+
 
         // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -346,6 +813,11 @@
                     const customer = JSON.parse(clickedRow.dataset.customerData);
                     showVaInfo(customer);
                 }
+            });
+
+            document.getElementById('toggleDashboardBtn').addEventListener('click', () => {
+                const dashboardSection = document.getElementById('customerDashboardSection');
+                dashboardSection.classList.toggle('d-none'); 
             });
         });
 
