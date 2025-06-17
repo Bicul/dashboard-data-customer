@@ -3,14 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Data Customer</title>
+    <title>Data Customer Biznet Branch Kalianda</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="text-center mb-4">Data Customer Terbaru</h1>
-        <div class="table-responsive">
+    <header class="app-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="app-logo"> 
+            <h1 class="app-title">Data Customer Biznet Branch Kalianda</h1>
+        </div>
+    </header>
+
+    <div class="container mt-4 main-content">
+        <div class="card p-4 shadow-sm mb-4">
+            <div class="row mb-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="searchInput" class="form-label">Pencarian Customer:</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Cari berdasarkan nama, email, atau ID...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label">Filter Status:</label>
+                    <select class="form-control" id="statusFilter">
+                        <option value="">Semua Status</option>
+                        </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="salesCodeFilter" class="form-label">Filter Sales Code:</label>
+                    <select class="form-control" id="salesCodeFilter">
+                        <option value="">Semua Sales Code</option>
+                        </select>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-outline-secondary btn-block" id="resetFilters" title="Reset Filter"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="customerCount" class="alert alert-info text-center"></div>
+
+        <div class="table-responsive app-table-container">
             <table id="customerTable" class="table table-striped table-bordered table-hover">
                 <thead class="thead-dark">
                     <tr>
@@ -56,23 +94,54 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td colspan="38" class="text-center">Memuat data...</td></tr>
+                    <tr><td colspan="39" class="text-center">Memuat data customer...</td></tr>
                 </tbody>
             </table>
         </div>
-        <div id="errorMessage" class="alert alert-danger d-none" role="alert">
+        <div id="errorMessage" class="alert alert-danger d-none mt-3" role="alert">
             Gagal memuat data customer. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.
         </div>
     </div>
 
+    <div class="modal fade" id="vaModal" tabindex="-1" aria-labelledby="vaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="vaModalLabel">Informasi Virtual Account</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="vaContentToCapture">
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="downloadVaJpgBtn"><i class="fas fa-download"></i> Download sebagai JPG</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
     <script>
-        // PASTE URL APLIKASI WEB ANDA DI SINI
         const webAppUrl = 'https://script.google.com/macros/s/AKfycbyPq6xvW3e3FoHozo2M0ZW3ScgNVvRs4ZYNVM44L54ZvTPn94KGlngdyAxwIQMbYhU_Lw/exec'; 
+        let allCustomerData = []; 
+        let filteredCustomerData = []; 
 
         async function fetchCustomerData() {
             const tableBody = document.getElementById('customerTable').getElementsByTagName('tbody')[0];
             const errorMessageDiv = document.getElementById('errorMessage');
-            tableBody.innerHTML = '<tr><td colspan="38" class="text-center">Memuat data...</td></tr>'; // Tampilkan pesan loading
+            const customerCountDiv = document.getElementById('customerCount'); 
+
+            tableBody.innerHTML = '<tr><td colspan="39" class="text-center"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div> Memuat data customer...</td></tr>';
+            errorMessageDiv.classList.add('d-none'); 
+            customerCountDiv.textContent = 'Memuat jumlah customer...'; 
 
             try {
                 const response = await fetch(webAppUrl);
@@ -81,53 +150,205 @@
                 }
                 const data = await response.json();
 
-                if (data.error) { // Cek jika ada error dari Apps Script (misal: sheet kosong)
+                if (data.error) {
                     throw new Error(data.error);
                 }
 
-                tableBody.innerHTML = ''; // Kosongkan pesan loading
+                allCustomerData = data; 
+                populateFilters(allCustomerData); 
+                applyFiltersAndSearch(); 
 
-                // Periksa apakah data ada dan merupakan array
-                if (Array.isArray(data) && data.length > 0) {
-                    data.forEach(customer => {
-                        let row = tableBody.insertRow();
-                        // Urutan kolom sesuai dengan header di HTML
-                        const headers = [
-                            'BUSINESSPARTNERID', 'BP_FULLNAME', 'BP_EMAIL', 'BP_PHONE', 'CONTRACTACCOUNT', 
-                            'BILLING_NAME', 'BILLING_EMAIL', 'BILLING_PHONE', 'CONTRACTNUMBER', 
-                            'SERVICE_TYPE', 'SALESCODE', 'BRANCH_FROM_SALESCODE', 'RO_FROM_SALESCODE', 
-                            'SM_FROM_SALESCODE', 'BUNDLE_LOB', 'BUNDLE_ID', 'BUNDLE_NAME', 'MODEM_STATUS', 
-                            'PROMO_CODE', 'CONTRACTSTARTDATE', 'EXPIREDDATE', 'STATUS', 'TERMDATE', 
-                            'ADDRESSID', 'ADDRESSTYPE', 'ADDRESSID_INST', 'SUBDISTRICT_INST', 
-                            'DISTRICT_INST', 'CITY_INST', 'STATE_INST', 'INSTALLATION_ADDRESS1', 
-                            'INSTALLATION_ADDRESS2', 'INSTALLATION_ADDRESS3', 'INSTALLATION_ADDRESS4', 
-                            'MATERIAL_NAME', 'MATERIAL_DESCRIPTION', 'TOTAL_TICKET', 'MODEM_TYPE', 'DEVICE_MODEL'
-                        ];
-
-                        headers.forEach(header => {
-                            let cell = row.insertCell();
-                            // Gunakan operator nullish coalescing (?? '') untuk menangani nilai null/undefined
-                            cell.textContent = customer[header] ?? ''; 
-                        });
-                    });
-                } else {
-                    tableBody.innerHTML = '<tr><td colspan="38" class="text-center">Tidak ada data customer.</td></tr>';
-                }
-                errorMessageDiv.classList.add('d-none'); // Sembunyikan pesan error jika berhasil
+                errorMessageDiv.classList.add('d-none'); 
             } catch (error) {
                 console.error('Error fetching customer data:', error);
-                tableBody.innerHTML = '<tr><td colspan="38" class="text-center text-danger">Error memuat data.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="39" class="text-center text-danger">Error memuat data.</td></tr>';
                 errorMessageDiv.textContent = `Gagal memuat data: ${error.message}. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.`;
-                errorMessageDiv.classList.remove('d-none'); // Tampilkan pesan error
+                errorMessageDiv.classList.remove('d-none'); 
+                customerCountDiv.textContent = 'Gagal memuat jumlah customer.'; 
             }
         }
 
-        // Panggil fungsi untuk memuat data saat halaman dimuat
-        fetchCustomerData();
+        function populateFilters(data) {
+            const statusFilter = document.getElementById('statusFilter');
+            const salesCodeFilter = document.getElementById('salesCodeFilter');
+
+            const uniqueStatuses = new Set();
+            const uniqueSalesCodes = new Set();
+
+            data.forEach(customer => {
+                if (customer.STATUS) uniqueStatuses.add(customer.STATUS);
+                if (customer.SALESCODE) uniqueSalesCodes.add(customer.SALESCODE);
+            });
+
+            statusFilter.innerHTML = '<option value="">Semua Status</option>';
+            Array.from(uniqueStatuses).sort().forEach(status => {
+                const option = document.createElement('option');
+                option.value = status;
+                option.textContent = status;
+                statusFilter.appendChild(option);
+            });
+
+            salesCodeFilter.innerHTML = '<option value="">Semua Sales Code</option>';
+            Array.from(uniqueSalesCodes).sort().forEach(salesCode => {
+                const option = document.createElement('option');
+                option.value = salesCode;
+                option.textContent = salesCode;
+                salesCodeFilter.appendChild(option);
+            });
+        }
+
+        function applyFiltersAndSearch() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const selectedStatus = document.getElementById('statusFilter').value;
+            const selectedSalesCode = document.getElementById('salesCodeFilter').value;
+
+            filteredCustomerData = allCustomerData.filter(customer => {
+                const matchesSearch = searchInput === '' ||
+                                      (customer.BP_FULLNAME && customer.BP_FULLNAME.toLowerCase().includes(searchInput)) ||
+                                      (customer.BP_EMAIL && customer.BP_EMAIL.toLowerCase().includes(searchInput)) ||
+                                      (customer.BUSINESSPARTNERID && String(customer.BUSINESSPARTNERID).toLowerCase().includes(searchInput));
+
+                const matchesStatus = selectedStatus === '' || (customer.STATUS && customer.STATUS === selectedStatus);
+
+                const matchesSalesCode = selectedSalesCode === '' || (customer.SALESCODE && customer.SALESCODE === selectedSalesCode);
+
+                return matchesSearch && matchesStatus && matchesSalesCode;
+            });
+
+            renderTable(filteredCustomerData);
+            updateCustomerCount(filteredCustomerData.length, allCustomerData.length); 
+        }
+
+        function renderTable(dataToRender) {
+            const tableBody = document.getElementById('customerTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; 
+
+            if (dataToRender.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="39" class="text-center">Tidak ada data yang ditemukan.</td></tr>';
+                return;
+            }
+
+            const headers = [
+                'BUSINESSPARTNERID', 'BP_FULLNAME', 'BP_EMAIL', 'BP_PHONE', 'CONTRACTACCOUNT', 
+                'BILLING_NAME', 'BILLING_EMAIL', 'BILLING_PHONE', 'CONTRACTNUMBER', 
+                'SERVICE_TYPE', 'SALESCODE', 'BRANCH_FROM_SALESCODE', 'RO_FROM_SALESCODE', 
+                'SM_FROM_SALESCODE', 'BUNDLE_LOB', 'BUNDLE_ID', 'BUNDLE_NAME', 'MODEM_STATUS', 
+                'PROMO_CODE', 'CONTRACTSTARTDATE', 'EXPIREDDATE', 'STATUS', 'TERMDATE', 
+                'ADDRESSID', 'ADDRESSTYPE', 'ADDRESSID_INST', 'SUBDISTRICT_INST', 
+                'DISTRICT_INST', 'CITY_INST', 'STATE_INST', 'INSTALLATION_ADDRESS1', 
+                'INSTALLATION_ADDRESS2', 'INSTALLATION_ADDRESS3', 'INSTALLATION_ADDRESS4', 
+                'MATERIAL_NAME', 'MATERIAL_DESCRIPTION', 'TOTAL_TICKET', 'MODEM_TYPE', 'DEVICE_MODEL'
+            ];
+
+            dataToRender.forEach(customer => {
+                let row = tableBody.insertRow();
+                row.dataset.customerData = JSON.stringify(customer); 
+                
+                headers.forEach(header => {
+                    let cell = row.insertCell();
+                    if (header.includes('DATE') && customer[header]) {
+                        try {
+                            const date = new Date(customer[header]);
+                            cell.textContent = date.toLocaleDateString('id-ID'); 
+                        } catch (e) {
+                            cell.textContent = customer[header]; 
+                        }
+                    } else {
+                        cell.textContent = customer[header] ?? ''; 
+                    }
+                });
+            });
+        }
+
+        function updateCustomerCount(filteredCount, totalCount) {
+            const customerCountDiv = document.getElementById('customerCount');
+            if (filteredCount === totalCount) {
+                customerCountDiv.innerHTML = `<strong>Total Customer: ${totalCount}</strong>`;
+            } else {
+                customerCountDiv.innerHTML = `<strong>Menampilkan ${filteredCount} dari ${totalCount} Customer.</strong>`;
+            }
+        }
+
+        function showVaInfo(customer) {
+            const vaContentToCapture = document.getElementById('vaContentToCapture');
+            const contractAccount = customer.CONTRACTACCOUNT || '';
+            const bpFullName = customer.BP_FULLNAME || 'Tidak Diketahui';
+            let expiredDate = customer.EXPIREDDATE;
+
+            if (expiredDate) {
+                try {
+                    const date = new Date(expiredDate);
+                    expiredDate = date.toLocaleDateString('id-ID'); 
+                } catch (e) {
+                    // Biarkan apa adanya jika gagal diformat
+                }
+            } else {
+                expiredDate = 'Tidak Diketahui';
+            }
+
+            vaContentToCapture.innerHTML = `
+                <div class="va-card">
+                    <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="va-biznet-logo"> 
+                    <p class="va-title">Berikut nomor Virtual Account Pembayarannya:</p>
+                    <p class="va-customer-info"><strong>Nama Customer:</strong> ${bpFullName}</p>
+                    <p class="va-customer-info"><strong>Masa aktif sampai:</strong> ${expiredDate}</p>
+                    <hr>
+                    <p class="va-bank"><strong>Bank Permata Virtual Account:</strong> <br><code>899300-${contractAccount}</code></p>
+                    <p class="va-bank"><strong>Bank BCA Virtual Account:</strong> <br><code>711170-${contractAccount}</code></p>
+                    <p class="va-bank"><strong>Bank Mandiri Virtual Account:</strong> <br><code>895911-${contractAccount}</code></p>
+                    <p class="va-other-methods"><strong>MBanking UOB / Indomaret / Alfamart / Alfamidi / CK / GoPay / Tokopedia / BRIMO / DANA:</strong> <br>Billing ID: <code>${contractAccount}</code></p>
+                </div>
+            `;
+            $('#vaModal').modal('show'); 
+        }
+
+        document.getElementById('downloadVaJpgBtn').addEventListener('click', () => {
+            const vaContent = document.getElementById('vaContentToCapture');
+            const customerNameElement = vaContent.querySelector('.va-customer-info:first-of-type strong');
+            const customerName = customerNameElement ? customerNameElement.nextSibling.textContent.trim() : 'Customer'; 
+
+            const options = {
+                scale: 2, 
+                useCORS: true, 
+                backgroundColor: '#ffffff', 
+            };
+
+            html2canvas(vaContent, options).then(canvas => {
+                const imgData = canvas.toDataURL('image/jpeg', 0.9); 
+                const link = document.createElement('a');
+                link.download = `VA_${customerName.replace(/[^a-zA-Z0-9_]/g, '')}.jpg`; 
+                link.href = imgData;
+                link.click();
+            }).catch(error => {
+                console.error('Error generating image:', error);
+                alert('Gagal membuat gambar VA. Silakan coba lagi.');
+            });
+        });
+
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchCustomerData(); 
+
+            document.getElementById('searchInput').addEventListener('keyup', applyFiltersAndSearch);
+            document.getElementById('statusFilter').addEventListener('change', applyFiltersAndSearch);
+            document.getElementById('salesCodeFilter').addEventListener('change', applyFiltersAndSearch);
+            document.getElementById('resetFilters').addEventListener('click', () => {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('statusFilter').value = '';
+                document.getElementById('salesCodeFilter').value = '';
+                applyFiltersAndSearch();
+            });
+
+            document.getElementById('customerTable').addEventListener('click', (event) => {
+                const clickedRow = event.target.closest('tr'); 
+                if (clickedRow && clickedRow.dataset.customerData) {
+                    const customer = JSON.parse(clickedRow.dataset.customerData);
+                    showVaInfo(customer);
+                }
+            });
+        });
+
     </script>
-    
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
