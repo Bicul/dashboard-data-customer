@@ -12,6 +12,7 @@ body {
     color: white;
     padding: 15px 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative; /* Untuk posisi tombol toggle */
 }
 
 .app-logo {
@@ -28,15 +29,41 @@ body {
     font-size: 1.5rem; 
 }
 
+/* Tombol Toggle Dashboard */
+.toggle-dashboard-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    font-size: 1.2rem;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-dashboard-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
 /* Untuk header di layar kecil, agar judul dan logo tidak terlalu berdesakan */
 @media (max-width: 575.98px) {
     .app-header .container {
         flex-direction: column; /* Tumpuk logo dan judul */
         text-align: center;
+        padding-bottom: 50px; /* Beri ruang ekstra untuk tombol */
+        position: relative;
     }
     .app-logo {
         margin-right: 0;
         margin-bottom: 10px; /* Jarak antara logo dan judul */
+    }
+    .toggle-dashboard-btn {
+        position: static; /* Biarkan tombol mengalir secara normal */
+        margin-top: 15px;
+        transform: none;
     }
 }
 
@@ -258,3 +285,93 @@ body {
     border-color: #bee5eb;
     border-radius: 8px;
 }
+
+/* =========================================== */
+/* NEW DASHBOARD STYLING START */
+/* =========================================== */
+
+.dashboard-section {
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.dashboard-section .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #004b90; /* Warna biru gelap Biznet */
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-table { /* Ini tidak lagi digunakan, tapi biarkan saja jika sewaktu-waktu kembali ke tabel */
+    width: 100%;
+    margin-top: 15px;
+    border-collapse: collapse; 
+}
+
+.dashboard-table th, .dashboard-table td {
+    padding: 12px;
+    text-align: center; 
+    vertical-align: middle;
+    border: 1px solid #dee2e6; 
+    white-space: nowrap; 
+}
+
+.dashboard-table thead th {
+    background-color: #007bff; 
+    color: white;
+    font-weight: 600;
+}
+
+.dashboard-table tbody tr:nth-child(odd) {
+    background-color: #fefefe;
+}
+
+.dashboard-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.dashboard-table tbody tr:hover {
+    background-color: #eaf6ff;
+}
+
+/* Styling untuk kartu chart */
+.chart-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    height: 350px; /* Tinggi standar untuk chart agar konsisten */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Menjaga judul, chart, dan legenda tetap terpisah */
+}
+
+.chart-card canvas {
+    max-height: 280px; /* Batasi tinggi canvas agar ada ruang untuk judul/legenda */
+    width: 100% !important; /* Pastikan chartjs mengisi lebar container */
+    height: auto !important; /* Biarkan tinggi menyesuaikan */
+}
+
+/* Responsivitas untuk tabel dashboard */
+@media (max-width: 767.98px) {
+    .dashboard-section .section-title {
+        font-size: 1.7rem;
+    }
+    .dashboard-table th, .dashboard-table td {
+        padding: 8px; 
+        font-size: 0.9em;
+    }
+    .dashboard-table tbody td {
+        white-space: normal; 
+    }
+    .chart-card {
+        height: 300px; /* Sedikit lebih kecil di layar kecil */
+    }
+    .chart-card canvas {
+        max-height: 230px;
+    }
+}
+
+/* =========================================== */
+/* NEW DASHBOARD STYLING END */
+/* =========================================== */
