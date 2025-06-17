@@ -222,9 +222,9 @@
 
     <script>
         // PASTIKAN URL INI SESUAI DENGAN URL WEB APP CUSTOMER DATA ANDA
-        const customerWebAppUrl = 'URL_WEB_APP_CUSTOMER_ANDA'; 
+        const customerWebAppUrl = 'https://script.google.com/macros/s/AKfycbyqkWMauoSKCfBQ9ZrsetbQLUojbpBGHaFxZqv3UShoKsGdDd7L_2QrIlAZv18F9safWQ/exec';
         // PASTE URL WEB APP REVENUE DATA ANDA DI SINI!
-        const revenueWebAppUrl = 'https://script.google.com/macros/s/AKfycbwN0YEMIOeoHfnQopeY0SePSle5zL1LW_XkQd6Z-Yw95XM-GFrkxWZxQCl8AfsFhYn7xQ/exec'; 
+        const revenueWebAppUrl = 'https://script.google.com/macros/s/AKfycbxf68JyP4opdcHsbyQGgeXhWkTCJ_jb14zpNdPD-n_e1dHvAt3yIISyNeJaVHTyc2iBPg/exec';
         
         // Mapping Sales Code ke Nama Sales Person
         const salesCodeNames = {
@@ -960,7 +960,7 @@
                 const monthNum = monthNames.indexOf(monthName.toLowerCase()); // 0-indexed for Date object
 
                 if (year && monthNum !== -1) {
-                    const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`; // YYYY-MM format for sorting
+                    const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`; //YYYY-MM format for sorting
                     monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + revenue;
                 }
             });
