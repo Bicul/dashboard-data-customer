@@ -3,766 +3,758 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Customer Biznet Branch Kalianda</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Dashboard Data Customer Biznet</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 </head>
 <body>
-    <header class="app-header">
-        <div class="container d-flex justify-content-between align-items-center">
-            <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="app-logo"> 
-            <h1 class="app-title">Data Customer Biznet Branch Kalianda</h1>
-            <div>
-                <button id="toggleCustomerDashboardBtn" class="btn btn-outline-light toggle-dashboard-btn mr-2" title="Toggle Customer Analytics">
-                    <i class="fas fa-users"></i> Customer
-                </button>
-                <button id="toggleRevenueDashboardBtn" class="btn btn-outline-light toggle-dashboard-btn" title="Toggle Revenue Analytics">
-                    <i class="fas fa-dollar-sign"></i> Revenue
-                </button>
+    <div class="wrapper">
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="sidebar-logo">
+                <h3>Biznet Data</h3>
             </div>
-        </div>
-    </header>
+            <ul class="list-unstyled components">
+                <p>Navigasi</p>
+                <li class="active">
+                    <a href="#" onclick="showSection('customerOverview')">
+                        <i class="fas fa-users"></i> Customer Overview
+                    </a>
+                </li>
+                <li>
+                    <a href="#analysisSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                        <i class="fas fa-chart-bar"></i> Analisis
+                    </a>
+                    <ul class="collapse list-unstyled" id="analysisSubmenu">
+                        <li>
+                            <a href="#" onclick="showSection('newCustomerAnalysis')">Customer Baru per Bulan</a>
+                        </li>
+                        <li>
+                            <a href="#" onclick="showSection('customerStatusAnalysis')">Status Customer</a>
+                        </li>
+                        <li>
+                            <a href="#" onclick="showSection('kecamatanAnalysis')">Distribusi per Kecamatan</a>
+                        </li>
+                        <li>
+                            <a href="#" onclick="showSection('bundleNameAnalysis')">Analisis Bundle Name</a>
+                        </li>
+                        <li>
+                            <a href="#" onclick="showSection('modemStatusAnalysis')">Analisis Status Modem</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
 
-    <div class="container mt-4 main-content">
-        <div class="card p-4 shadow-sm mb-4">
-            <div class="row mb-3 align-items-end">
-                <div class="col-md-5">
-                    <label for="searchInput" class="form-label">Pencarian Customer:</label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        </div>
-                        <input type="text" class="form-control" id="searchInput" placeholder="Cari berdasarkan nama, email, atau ID...">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <label for="statusFilter" class="form-label">Filter Status:</label>
-                    <select class="form-control" id="statusFilter">
-                        <option value="">Semua Status</option>
-                        </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="salesCodeFilter" class="form-label">Filter Sales Code:</label>
-                    <select class="form-control" id="salesCodeFilter">
-                        <option value="">Semua Sales Code</option>
-                        </select>
-                </div>
-                <div class="col-md-1">
-                    <button class="btn btn-outline-secondary btn-block" id="resetFilters" title="Reset Filter"><i class="fas fa-sync-alt"></i></button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="customerCount" class="alert alert-info text-center"></div>
-
-        <div class="container mt-5 dashboard-section d-none" id="customerDashboardSection">
-            <h2 class="section-title">Analisis Data Customer</h2>
-
-            <div class="card p-4 shadow-sm mb-4">
-                <h3 class="card-title">Status Customer per Sales Code</h3>
-                <div id="salesCodeStatusDashboard" class="row">
-                    <p class="text-muted text-center col-12">Memuat data analisis status...</p>
-                </div>
-            </div>
-
-            <div class="card p-4 shadow-sm mb-4">
-                <h3 class="card-title">Distribusi Customer per Sales Code (Berdasarkan Kecamatan)</h3>
-                <div id="salesCodeSubdistrictDashboard" class="row">
-                    <p class="text-muted text-center col-12">Memuat data analisis kecamatan...</p>
-                </div>
-            </div>
-
-            <div class="card p-4 shadow-sm mb-4">
-                <h3 class="card-title">Customer Baru per Bulan (per Sales Code)</h3>
-                <div id="monthlyNewCustomersDashboard" class="row">
-                    <div class="col-12 chart-card-lg"> 
-                        <canvas id="monthlySalesChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-        <div class="container mt-5 dashboard-section d-none" id="revenueDashboardSection">
-            <h2 class="section-title">Analisis Data Revenue</h2>
-
-            <div class="card p-4 shadow-sm mb-4">
-                <h3 class="card-title">Revenue per Kuartal</h3>
-                <div class="col-12 chart-card-lg"> 
-                    <canvas id="quarterlyRevenueChart"></canvas>
-                </div>
-            </div>
-
-            <div class="card p-4 shadow-sm mb-4">
-                <h3 class="card-title">Revenue per Bulan</h3>
-                <div class="col-12 chart-card-lg"> 
-                    <canvas id="monthlyRevenueChart"></canvas>
-                </div>
-            </div>
-
-        </div>
-        <div class="table-responsive app-table-container">
-            <table id="customerTable" class="table table-striped table-bordered table-hover">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>BUSINESSPARTNERID</th>
-                        <th>BP_FULLNAME</th>
-                        <th>BP_EMAIL</th>
-                        <th>BP_PHONE</th>
-                        <th>CONTRACTACCOUNT</th>
-                        <th>BILLING_NAME</th>
-                        <th>BILLING_EMAIL</th>
-                        <th>BILLING_PHONE</th>
-                        <th>CONTRACTNUMBER</th>
-                        <th>SERVICE_TYPE</th>
-                        <th>SALESCODE</th>
-                        <th>BRANCH_FROM_SALESCODE</th>
-                        <th>RO_FROM_SALESCODE</th>
-                        <th>SM_FROM_SALESCODE</th>
-                        <th>BUNDLE_LOB</th>
-                        <th>BUNDLE_ID</th>
-                        <th>BUNDLE_NAME</th>
-                        <th>MODEM_STATUS</th>
-                        <th>PROMO_CODE</th>
-                        <th>CONTRACTSTARTDATE</th>
-                        <th>EXPIREDDATE</th>
-                        <th>STATUS</th>
-                        <th>TERMDATE</th>
-                        <th>ADDRESSID</th>
-                        <th>ADDRESSTYPE</th>
-                        <th>ADDRESSID_INST</th>
-                        <th>SUBDISTRICT_INST</th>
-                        <th>DISTRICT_INST</th>
-                        <th>CITY_INST</th>
-                        <th>STATE_INST</th>
-                        <th>INSTALLATION_ADDRESS1</th>
-                        <th>INSTALLATION_ADDRESS2</th>
-                        <th>INSTALLATION_ADDRESS3</th>
-                        <th>INSTALLATION_ADDRESS4</th>
-                        <th>MATERIAL_NAME</th>
-                        <th>MATERIAL_DESCRIPTION</th>
-                        <th>TOTAL_TICKET</th>
-                        <th>MODEM_TYPE</th>
-                        <th>DEVICE_MODEL</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="39" class="text-center">Memuat data customer...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="errorMessage" class="alert alert-danger d-none mt-3" role="alert">
-            Gagal memuat data customer. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.
-        </div>
-    </div>
-
-    <div class="modal fade" id="vaModal" tabindex="-1" aria-labelledby="vaModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="vaModalLabel">Informasi Virtual Account</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+        <div id="content">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-info d-block d-lg-none">
+                        <i class="fas fa-align-left"></i>
+                        <span>Menu</span>
                     </button>
+                    <h2 class="ml-auto mb-0 navbar-title">Dashboard Data Customer Biznet Branch Kalianda</h2>
                 </div>
-                <div class="modal-body">
-                    <div id="vaContentToCapture">
-                        </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="downloadVaJpgBtn"><i class="fas fa-download"></i> Download sebagai JPG</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
+            </nav>
 
-    <div class="modal fade" id="monthlyCustomerDetailModal" tabindex="-1" aria-labelledby="monthlyCustomerDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="monthlyCustomerDetailModalLabel">Detail Customer Baru</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <h6 id="monthlyDetailTitle" class="text-center mb-3"></h6>
+            <section id="customerOverview" class="content-section">
+                <div class="card p-4 shadow-sm mb-4">
+                    <h2 class="text-center mb-4">Daftar Customer</h2>
+
+                    <div class="row mb-4 align-items-end">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="searchCustomer">Pencarian Customer:</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    </div>
+                                    <input type="text" class="form-control" id="searchCustomer" placeholder="Cari berdasarkan nama, email, atau ID...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="filterStatus">Filter Status:</label>
+                                <select class="form-control" id="filterStatus">
+                                    <option value="">Semua Status</option>
+                                    <option value="ACTIVE">ACTIVE</option>
+                                    <option value="SUSPENDED">SUSPENDED</option>
+                                    <option value="TERMINATED">TERMINATED</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="filterSalesCode">Filter Sales Code:</label>
+                                <select class="form-control" id="filterSalesCode">
+                                    <option value="">Semua Sales Code</option>
+                                    </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary btn-block" id="applyFiltersBtn">
+                                <i class="fas fa-sync-alt"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="totalCustomerDisplay" class="alert alert-info text-center" role="alert">
+                        Memuat jumlah customer...
+                    </div>
+
                     <div class="table-responsive">
-                        <table id="monthlyCustomerDetailTable" class="table table-striped table-bordered table-hover">
+                        <table class="table table-striped table-bordered table-hover" id="customerTable">
                             <thead class="thead-dark">
                                 <tr>
                                     <th>BUSINESSPARTNERID</th>
                                     <th>BP_FULLNAME</th>
                                     <th>BP_EMAIL</th>
                                     <th>BP_PHONE</th>
-                                    <th>CONTRACTSTARTDATE</th>
+                                    <th>CONTRACTACCOUNT</th>
+                                    <th>BILLING_NAME</th>
+                                    <th>BILLING_EMAIL</th>
+                                    <th>BILLING_PHONE</th>
+                                    <th>CONTRACTNUMBER</th>
+                                    <th>SERVICE_TYPE</th>
                                     <th>SALESCODE</th>
+                                    <th>BRANCH_FROM_SALESCODE</th>
+                                    <th>RO_FROM_SALESCODE</th>
+                                    <th>SM_FROM_SALESCODE</th>
+                                    <th>BUNDLE_LOB</th>
+                                    <th>BUNDLE_ID</th>
+                                    <th>BUNDLE_NAME</th>
+                                    <th>MODEM_STATUS</th>
+                                    <th>PROMO_CODE</th>
+                                    <th>CONTRACTSTARTDATE</th>
+                                    <th>EXPIREDDATE</th>
                                     <th>STATUS</th>
+                                    <th>TERMDATE</th>
+                                    <th>ADDRESSID</th>
+                                    <th>ADDRESSTYPE</th>
+                                    <th>ADDRESSID_INST</th>
                                     <th>SUBDISTRICT_INST</th>
+                                    <th>DISTRICT_INST</th>
+                                    <th>CITY_INST</th>
+                                    <th>STATE_INST</th>
+                                    <th>INSTALLATION_ADDRESS1</th>
+                                    <th>INSTALLATION_ADDRESS2</th>
+                                    <th>INSTALLATION_ADDRESS3</th>
+                                    <th>INSTALLATION_ADDRESS4</th>
+                                    <th>MATERIAL_NAME</th>
+                                    <th>MATERIAL_DESCRIPTION</th>
+                                    <th>TOTAL_TICKET</th>
+                                    <th>MODEM_TYPE</th>
+                                    <th>DEVICE_MODEL</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 </tbody>
                         </table>
                     </div>
+
+                    <nav>
+                        <ul class="pagination justify-content-center" id="customerPagination">
+                            </ul>
+                    </nav>
+
+                    <div class="modal fade" id="customerDetailModal" tabindex="-1" aria-labelledby="customerDetailModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="customerDetailModalLabel">Detail Customer</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body" id="customerDetailBody">
+                                    </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                    <button type="button" class="btn btn-info" id="showVaButton">Tampilkan VA Pembayaran</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="vaModal" tabindex="-1" aria-labelledby="vaModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content va-print-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="vaModalLabel">Berikut nomor Virtual Account Pembayarannya:</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body" id="vaDetailBody">
+                                    </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" id="downloadVaBtn">Download sebagai JPG</button>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="chartDetailModal" tabindex="-1" aria-labelledby="chartDetailModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="chartDetailModalLabel">Detail Customer untuk Analisis</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-bordered table-hover" id="chartCustomerDetailTable">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th>BP_FULLNAME</th>
+                                                    <th>CONTRACTNUMBER</th>
+                                                    <th>SALESCODE</th>
+                                                    <th>CONTRACTSTARTDATE</th>
+                                                    <th>STATUS</th>
+                                                    <th>BUNDLE_NAME</th>
+                                                    <th>SUBDISTRICT_INST</th>
+                                                    </tr>
+                                            </thead>
+                                            <tbody>
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </section>
+
+            <section id="newCustomerAnalysis" class="content-section d-none">
+                <div class="card p-3 shadow-sm">
+                    <h3 class="card-title text-center">Customer Baru per Bulan (per Sales Code)</h3>
+                    <div class="chart-container">
+                        <canvas id="customerChart"></canvas>
+                    </div>
+                    <div id="customerChartError" class="alert alert-danger mt-3 d-none">Gagal memuat data customer baru.</div>
                 </div>
-            </div>
+            </section>
+
+            <section id="customerStatusAnalysis" class="content-section d-none">
+                <div class="card p-3 shadow-sm">
+                    <h3 class="card-title text-center">Status Customer per Sales Code</h3>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="customerStatusTable">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Sales Code</th>
+                                    <th>ACTIVE</th>
+                                    <th>SUSPENDED</th>
+                                    <th>TERMINATED</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                    <div id="customerStatusError" class="alert alert-danger mt-3 d-none">Gagal memuat data analisis status.</div>
+                </div>
+            </section>
+
+            <section id="kecamatanAnalysis" class="content-section d-none">
+                <div class="card p-3 shadow-sm">
+                    <h3 class="card-title text-center">Distribusi Customer per Sales Code (Berdasarkan Kecamatan)</h3>
+                    <div class="form-group">
+                        <label for="salesCodeKecamatanFilter">Pilih Sales Code:</label>
+                        <select class="form-control" id="salesCodeKecamatanFilter">
+                            </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="kecamatanChart"></canvas>
+                    </div>
+                    <div id="kecamatanChartError" class="alert alert-danger mt-3 d-none">Gagal memuat data analisis kecamatan.</div>
+                </div>
+            </section>
+
+            <section id="bundleNameAnalysis" class="content-section d-none">
+                <div class="card p-3 shadow-sm">
+                    <h3 class="card-title text-center">Analisis Customer per Tipe Bundle Name</h3>
+                    <div class="chart-container">
+                        <canvas id="bundleNameChart"></canvas>
+                    </div>
+                    <div id="bundleNameError" class="alert alert-danger mt-3 d-none">Gagal memuat data analisis Bundle Name.</div>
+                </div>
+            </section>
+
+            <section id="modemStatusAnalysis" class="content-section d-none">
+                <div class="card p-3 shadow-sm">
+                    <h3 class="card-title text-center">Analisis Customer per Status Modem</h3>
+                    <div class="chart-container">
+                        <canvas id="modemStatusChart"></canvas>
+                    </div>
+                    <div id="modemStatusError" class="alert alert-danger mt-3 d-none">Gagal memuat data analisis Status Modem.</div>
+                </div>
+            </section>
+
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <script>
-        // PASTIKAN URL INI SESUAI DENGAN URL WEB APP CUSTOMER DATA ANDA
-        const customerWebAppUrl = 'https://script.google.com/macros/s/AKfycbyqkWMauoSKCfBQ9ZrsetbQLUojbpBGHaFxZqv3UShoKsGdDd7L_2QrIlAZv18F9safWQ/exec';
-        // PASTE URL WEB APP REVENUE DATA ANDA DI SINI!
-        const revenueWebAppUrl = 'https://script.google.com/macros/s/AKfycbxf68JyP4opdcHsbyQGgeXhWkTCJ_jb14zpNdPD-n_e1dHvAt3yIISyNeJaVHTyc2iBPg/exec';
-        
-        // Mapping Sales Code ke Nama Sales Person
+        // --- KONFIGURASI URL APPS SCRIPT ---
+        const customerWebAppUrl = 'https://script.google.com/macros/s/AKfycbxx2V5MzkTUrtFY4cbLfyjE51cdZoahXEodZzg7H30qwxFgIABfNiI2DZ8A1fSNLpkhZQ/exec'; // GANTI DENGAN URL APPS SCRIPT ANDA
+
+        // --- GLOBAL VARIABLES ---
+        let allCustomers = [];
+        let filteredCustomers = [];
+        const itemsPerPage = 10;
+        let currentPage = 1;
+
+        // Sales Code to Name mapping
         const salesCodeNames = {
             '200602': 'Riski Aprianto',
             '200603': 'Habibi',
-            '200604': 'Ananda Ilham Hakiki',
-            // Tambahkan sales code lain jika ada
+            '200604': 'Ananda Ilham Hakiki'
         };
 
-        let allCustomerData = []; 
-        let allRevenueData = []; 
-        let filteredCustomerData = []; 
-        let salesCodeCharts = {}; 
-        let subdistrictCharts = {};
-        let monthlySalesChartInstance = null; 
-        let quarterlyRevenueChartInstance = null; 
-        let monthlyRevenueChartInstance = null;   
+        // Chart instances
+        let customerChartInstance = null;
+        let kecamatanChartInstance = null;
+        let bundleNameChartInstance = null;
+        let modemStatusChartInstance = null;
 
+        // --- UTILITY FUNCTIONS ---
+        const formatNumber = (num) => new Intl.NumberFormat('id-ID').format(num);
 
-        async function fetchCustomerData() {
-            const tableBody = document.getElementById('customerTable').getElementsByTagName('tbody')[0];
-            const errorMessageDiv = document.getElementById('errorMessage');
-            const customerCountDiv = document.getElementById('customerCount'); 
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.add('d-none');
+            });
+            document.getElementById(sectionId).classList.remove('d-none');
 
-            tableBody.innerHTML = '<tr><td colspan="39" class="text-center"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div> Memuat data customer...</td></tr>';
-            errorMessageDiv.classList.add('d-none'); 
-            customerCountDiv.textContent = 'Memuat jumlah customer...'; 
-
-            // Clear customer dashboards while loading
-            document.getElementById('salesCodeStatusDashboard').innerHTML = '<p class="text-muted text-center col-12">Memuat data analisis status...</p>';
-            document.getElementById('salesCodeSubdistrictDashboard').innerHTML = '<p class="text-muted text-center col-12">Memuat data analisis kecamatan...</p>';
-            document.getElementById('monthlyNewCustomersDashboard').innerHTML = '<div class="col-12 chart-card-lg"><p class="text-muted text-center">Memuat data analisis penjualan bulanan...</p></div>';
-            
-            // Clear revenue dashboards while loading and recreate canvas
-            document.getElementById('quarterlyRevenueChart').parentNode.innerHTML = '<canvas id="quarterlyRevenueChart"></canvas><p class="text-muted text-center">Memuat data revenue kuartalan...</p>';
-            document.getElementById('monthlyRevenueChart').parentNode.innerHTML = '<canvas id="monthlyRevenueChart"></canvas><p class="text-muted text-center">Memuat data revenue bulanan...</p>';
-
-
-            try {
-                // Fetch Customer Data
-                const customerResponse = await fetch(customerWebAppUrl);
-                if (!customerResponse.ok) {
-                    throw new Error(`HTTP error! status: ${customerResponse.status} for customer data`);
+            // Update active state in sidebar
+            document.querySelectorAll('#sidebar ul li').forEach(li => li.classList.remove('active'));
+            const clickedLink = document.querySelector(`#sidebar a[onclick="showSection('${sectionId}')"]`);
+            if (clickedLink) {
+                clickedLink.parentElement.classList.add('active');
+                // If it's in a submenu, also activate the parent
+                if (clickedLink.closest('.collapse')) {
+                    clickedLink.closest('li').classList.add('active');
                 }
-                const customerData = await customerResponse.json();
-                if (customerData.error) {
-                    throw new Error(customerData.error);
-                }
-                allCustomerData = customerData; 
-                populateFilters(allCustomerData); 
-                applyFiltersAndSearch(); 
-                renderSalesCodeStatusDashboard(allCustomerData);
-                renderSalesCodeSubdistrictDashboard(allCustomerData);
-                renderMonthlySalesChart(allCustomerData); 
+            }
 
-                // Fetch Revenue Data
-                const revenueResponse = await fetch(revenueWebAppUrl);
-                if (!revenueResponse.ok) {
-                    throw new Error(`HTTP error! status: ${revenueResponse.status} for revenue data`);
-                }
-                const revenueData = await revenueResponse.json();
-                if (revenueData.error) {
-                    throw new Error(revenueData.error);
-                }
-                allRevenueData = revenueData;
-                renderQuarterlyRevenueChart(allRevenueData); 
-                renderMonthlyRevenueChart(allRevenueData);   
+            // Render charts relevant to the section when it's shown
+            if (sectionId === 'newCustomerAnalysis') renderCustomerChart();
+            if (sectionId === 'customerStatusAnalysis') renderCustomerStatusTable();
+            if (sectionId === 'kecamatanAnalysis') renderKecamatanChart();
+            if (sectionId === 'bundleNameAnalysis') renderBundleNameChart();
+            if (sectionId === 'modemStatusAnalysis') renderModemStatusChart();
 
-
-                errorMessageDiv.classList.add('d-none'); 
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                tableBody.innerHTML = '<tr><td colspan="39" class="text-center text-danger">Error memuat data.</td></tr>';
-                errorMessageDiv.textContent = `Gagal memuat data: ${error.message}. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.`;
-                errorMessageDiv.classList.remove('d-none'); 
-                customerCountDiv.textContent = 'Gagal memuat jumlah customer.'; 
-                
-                // Clear dashboards on error
-                document.getElementById('salesCodeStatusDashboard').innerHTML = '<p class="text-danger text-center col-12">Gagal memuat data analisis status.</p>';
-                document.getElementById('salesCodeSubdistrictDashboard').innerHTML = '<p class="text-danger text-center col-12">Gagal memuat data analisis kecamatan.</p>';
-                document.getElementById('monthlyNewCustomersDashboard').innerHTML = '<div class="col-12 chart-card-lg"><p class="text-danger text-center">Gagal memuat data analisis penjualan bulanan.</p></div>';
-                
-                document.getElementById('quarterlyRevenueChart').parentNode.innerHTML = '<canvas id="quarterlyRevenueChart"></canvas><p class="text-danger text-center">Gagal memuat data revenue kuartalan.</p>';
-                document.getElementById('monthlyRevenueChart').parentNode.innerHTML = '<canvas id="monthlyRevenueChart"></canvas><p class="text-danger text-center">Gagal memuat data revenue bulanan.</p>';
-
+            // For mobile, close sidebar when a section is selected
+            if (window.innerWidth <= 768) {
+                $('#sidebar').removeClass('active');
             }
         }
 
-        function populateFilters(data) {
-            const statusFilter = document.getElementById('statusFilter');
-            const salesCodeFilter = document.getElementById('salesCodeFilter');
+        // --- FETCH DATA FUNCTIONS ---
+        async function fetchCustomerData() {
+            try {
+                const response = await fetch(customerWebAppUrl);
+                const result = await response.json();
 
-            const uniqueStatuses = new Set();
-            const uniqueSalesCodes = new Set();
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                allCustomers = result;
+                filteredCustomers = [...allCustomers];
+                document.getElementById('totalCustomerDisplay').textContent = `Menampilkan ${filteredCustomers.length} dari ${allCustomers.length} Customer.`;
+                populateSalesCodeFilter();
+                renderCustomerTable(currentPage);
+                renderAllCharts(); // Render all charts after initial data fetch
+            } catch (error) {
+                console.error('Error fetching customer data:', error);
+                document.getElementById('totalCustomerDisplay').textContent = `Gagal memuat jumlah customer. Error: ${error.message}.`;
+                document.getElementById('customerChartError').classList.remove('d-none');
+                document.getElementById('customerChartError').textContent = `Gagal memuat data customer baru. Error: ${error.message}`;
+                document.getElementById('customerStatusError').classList.remove('d-none');
+                document.getElementById('customerStatusError').textContent = `Gagal memuat data analisis status. Error: ${error.message}`;
+                document.getElementById('kecamatanChartError').classList.remove('d-none');
+                document.getElementById('kecamatanChartError').textContent = `Gagal memuat data analisis kecamatan. Error: ${error.message}`;
+                document.getElementById('bundleNameError').classList.remove('d-none');
+                document.getElementById('bundleNameError').textContent = `Gagal memuat data analisis Bundle Name. Error: ${error.message}`;
+                document.getElementById('modemStatusError').classList.remove('d-none');
+                document.getElementById('modemStatusError').textContent = `Gagal memuat data analisis Status Modem. Error: ${error.message}`;
 
-            data.forEach(customer => {
-                if (customer.STATUS) uniqueStatuses.add(customer.STATUS);
-                if (customer.SALESCODE) uniqueSalesCodes.add(customer.SALESCODE);
-            });
 
-            statusFilter.innerHTML = '<option value="">Semua Status</option>';
-            Array.from(uniqueStatuses).sort().forEach(status => {
-                const option = document.createElement('option');
-                option.value = status;
-                option.textContent = status;
-                statusFilter.appendChild(option);
-            });
+                // Also display error on table
+                const tableBody = document.querySelector('#customerTable tbody');
+                tableBody.innerHTML = `<tr><td colspan="38" class="text-center text-danger">Gagal memuat data: ${error.message}. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.</td></tr>`;
+            }
+        }
 
-            salesCodeFilter.innerHTML = '<option value="">Semua Sales Code</option>';
-            Array.from(uniqueSalesCodes).sort().forEach(salesCode => {
-                const option = document.createElement('option');
-                option.value = salesCode;
-                option.textContent = `${salesCodeNames[salesCode] ? salesCodeNames[salesCode] + ' (' : ''}${salesCode}${salesCodeNames[salesCode] ? ')' : ''}`; // Menampilkan Sales Code dan Nama Sales Person
-                salesCodeFilter.appendChild(option);
+        // --- CUSTOMER TABLE & PAGINATION ---
+        function renderCustomerTable(page) {
+            const tableBody = document.querySelector('#customerTable tbody');
+            tableBody.innerHTML = '';
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = filteredCustomers.slice(startIndex, endIndex);
+
+            const customerHeaders = [
+                'BUSINESSPARTNERID', 'BP_FULLNAME', 'BP_EMAIL', 'BP_PHONE', 'CONTRACTACCOUNT',
+                'BILLING_NAME', 'BILLING_EMAIL', 'BILLING_PHONE', 'CONTRACTNUMBER', 'SERVICE_TYPE',
+                'SALESCODE', 'BRANCH_FROM_SALESCODE', 'RO_FROM_SALESCODE', 'SM_FROM_SALESCODE',
+                'BUNDLE_LOB', 'BUNDLE_ID', 'BUNDLE_NAME', 'MODEM_STATUS', 'PROMO_CODE',
+                'CONTRACTSTARTDATE', 'EXPIREDDATE', 'STATUS', 'TERMDATE', 'ADDRESSID',
+                'ADDRESSTYPE', 'ADDRESSID_INST', 'SUBDISTRICT_INST', 'DISTRICT_INST',
+                'CITY_INST', 'STATE_INST', 'INSTALLATION_ADDRESS1', 'INSTALLATION_ADDRESS2',
+                'INSTALLATION_ADDRESS3', 'INSTALLATION_ADDRESS4', 'MATERIAL_NAME',
+                'MATERIAL_DESCRIPTION', 'TOTAL_TICKET', 'MODEM_TYPE', 'DEVICE_MODEL'
+            ];
+
+            if (paginatedItems.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="38" class="text-center">Tidak ada data customer yang ditemukan.</td></tr>`;
+            } else {
+                paginatedItems.forEach(customer => {
+                    const row = tableBody.insertRow();
+                    customerHeaders.forEach(header => {
+                        const cell = row.insertCell();
+                        cell.textContent = customer[header] || '-';
+                    });
+                    row.style.cursor = 'pointer';
+                    row.onclick = () => showCustomerDetail(customer);
+                });
+            }
+            renderPagination(filteredCustomers.length, page);
+        }
+
+        function renderPagination(totalItems, currentPage) {
+            const paginationUl = document.getElementById('customerPagination');
+            paginationUl.innerHTML = '';
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            const maxPagesToShow = 5; // Number of pages to show around the current page
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            // Adjust startPage if endPage is at totalPages and totalPages is less than maxPagesToShow from current
+            if (endPage === totalPages && endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            // "Previous" button
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            const prevA = document.createElement('a');
+            prevA.className = 'page-link';
+            prevA.href = '#';
+            prevA.innerHTML = '&laquo;';
+            prevA.onclick = (e) => {
+                e.preventDefault();
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderCustomerTable(currentPage);
+                }
+            };
+            prevLi.appendChild(prevA);
+            paginationUl.appendChild(prevLi);
+
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = '#';
+                a.textContent = i;
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    renderCustomerTable(currentPage);
+                };
+                li.appendChild(a);
+                paginationUl.appendChild(li);
+            }
+
+            // "Next" button
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            const nextA = document.createElement('a');
+            nextA.className = 'page-link';
+            nextA.href = '#';
+            nextA.innerHTML = '&raquo;';
+            nextA.onclick = (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderCustomerTable(currentPage);
+                }
+            };
+            nextLi.appendChild(nextA);
+            paginationUl.appendChild(nextLi);
+        }
+
+
+        function showCustomerDetail(customer) {
+            const detailBody = document.getElementById('customerDetailBody');
+            detailBody.innerHTML = `
+                <p><strong>Business Partner ID:</strong> ${customer.BUSINESSPARTNERID || '-'}</p>
+                <p><strong>Nama Lengkap:</strong> ${customer.BP_FULLNAME || '-'}</p>
+                <p><strong>Email:</strong> ${customer.BP_EMAIL || '-'}</p>
+                <p><strong>Telepon:</strong> ${customer.BP_PHONE || '-'}</p>
+                <p><strong>Contract Account:</strong> ${customer.CONTRACTACCOUNT || '-'}</p>
+                <p><strong>Nama Billing:</strong> ${customer.BILLING_NAME || '-'}</p>
+                <p><strong>Email Billing:</strong> ${customer.BILLING_EMAIL || '-'}</p>
+                <p><strong>Telepon Billing:</strong> ${customer.BILLING_PHONE || '-'}</p>
+                <p><strong>Nomor Kontrak:</strong> ${customer.CONTRACTNUMBER || '-'}</p>
+                <p><strong>Tipe Layanan:</strong> ${customer.SERVICE_TYPE || '-'}</p>
+                <p><strong>Sales Code:</strong> ${customer.SALESCODE || '-'} ${salesCodeNames[customer.SALESCODE] ? `(${salesCodeNames[customer.SALESCODE]})` : ''}</p>
+                <p><strong>Cabang dari Sales Code:</strong> ${customer.BRANCH_FROM_SALESCODE || '-'}</p>
+                <p><strong>RO dari Sales Code:</strong> ${customer.RO_FROM_SALESCODE || '-'}</p>
+                <p><strong>SM dari Sales Code:</strong> ${customer.SM_FROM_SALESCODE || '-'}</p>
+                <p><strong>Bundle LOB:</strong> ${customer.BUNDLE_LOB || '-'}</p>
+                <p><strong>ID Bundle:</strong> ${customer.BUNDLE_ID || '-'}</p>
+                <p><strong>Nama Bundle:</strong> ${customer.BUNDLE_NAME || '-'}</p>
+                <p><strong>Status Modem:</strong> ${customer.MODEM_STATUS || '-'}</p>
+                <p><strong>Kode Promo:</strong> ${customer.PROMO_CODE || '-'}</p>
+                <p><strong>Tanggal Mulai Kontrak:</strong> ${customer.CONTRACTSTARTDATE || '-'}</p>
+                <p><strong>Tanggal Kadaluarsa:</strong> ${customer.EXPIREDDATE || '-'}</p>
+                <p><strong>Status:</strong> ${customer.STATUS || '-'}</p>
+                <p><strong>Tanggal Berakhir:</strong> ${customer.TERMDATE || '-'}</p>
+                <p><strong>ID Alamat:</strong> ${customer.ADDRESSID || '-'}</p>
+                <p><strong>Tipe Alamat:</strong> ${customer.ADDRESSTYPE || '-'}</p>
+                <p><strong>ID Alamat Instalasi:</strong> ${customer.ADDRESSID_INST || '-'}</p>
+                <p><strong>Kecamatan Instalasi:</strong> ${customer.SUBDISTRICT_INST || '-'}</p>
+                <p><strong>Kabupaten/Kota Instalasi:</strong> ${customer.DISTRICT_INST || '-'}</p>
+                <p><strong>Kota Instalasi:</strong> ${customer.CITY_INST || '-'}</p>
+                <p><strong>Provinsi Instalasi:</strong> ${customer.STATE_INST || '-'}</p>
+                <p><strong>Alamat Instalasi 1:</strong> ${customer.INSTALLATION_ADDRESS1 || '-'}</p>
+                <p><strong>Alamat Instalasi 2:</strong> ${customer.INSTALLATION_ADDRESS2 || '-'}</p>
+                <p><strong>Alamat Instalasi 3:</strong> ${customer.INSTALLATION_ADDRESS3 || '-'}</p>
+                <p><strong>Alamat Instalasi 4:</strong> ${customer.INSTALLATION_ADDRESS4 || '-'}</p>
+                <p><strong>Nama Material:</strong> ${customer.MATERIAL_NAME || '-'}</p>
+                <p><strong>Deskripsi Material:</strong> ${customer.MATERIAL_DESCRIPTION || '-'}</p>
+                <p><strong>Total Tiket:</strong> ${customer.TOTAL_TICKET || '-'}</p>
+                <p><strong>Tipe Modem:</strong> ${customer.MODEM_TYPE || '-'}</p>
+                <p><strong>Model Perangkat:</strong> ${customer.DEVICE_MODEL || '-'}</p>
+            `;
+            $('#customerDetailModal').modal('show');
+
+            document.getElementById('showVaButton').onclick = () => showVaDetail(customer);
+        }
+
+        function showVaDetail(customer) {
+            const vaDetailBody = document.getElementById('vaDetailBody');
+            let vaHtmlContent = `
+                <div class="va-header-logo">
+                    <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="img-fluid va-logo">
+                </div>
+            `;
+
+            vaHtmlContent += `
+                <p><strong>Nama Customer:</strong> ${customer.BP_FULLNAME || '-'}</p>
+                <p><strong>Masa aktif sampai:</strong> ${customer.EXPIREDDATE || '-'}</p>
+            `;
+
+            if (customer.BUNDLE_LOB && customer.BUNDLE_LOB.toUpperCase() === 'METRONET') {
+                // Logika untuk Metronet
+                vaHtmlContent += `
+                    <p><strong>Pembayaran melalui Virtual Account</strong></p>
+                    <p><strong>Payment via Virtual Account</strong></p>
+                    <p><strong>BCA:</strong> ${customer.CONTRACTACCOUNT ? `711160-${customer.CONTRACTACCOUNT}` : '-'}</p>
+                    <p><strong>Bank Permata:</strong> ${customer.CONTRACTACCOUNT ? `883100-${customer.CONTRACTACCOUNT}` : '-'}</p>
+                    <p><strong>Bank Mandiri:</strong> ${customer.CONTRACTACCOUNT ? `895912-${customer.CONTRACTACCOUNT}` : '-'}</p>
+                    <p><strong>OCBC:</strong> ${customer.CONTRACTACCOUNT ? `903022-${customer.CONTRACTACCOUNT}` : '-'}</p>
+                    <p><strong>Billing ID:</strong> ${customer.CONTRACTACCOUNT || '-'}</p>
+                `;
+            } else {
+                // Logika default untuk Home atau BUNDLE_LOB lainnya
+                vaHtmlContent += `
+                    <p><strong>Bank Permata Virtual Account:</strong> ${customer.CONTRACTACCOUNT ? `899300-${customer.CONTRACTACCOUNT}` : '-'}</p>
+                    <p><strong>Bank BCA Virtual Account:</strong> ${customer.CONTRACTACCOUNT ? `711170-${customer.CONTRACTACCOUNT}` : '-'}</p>
+                    <p><strong>Bank Mandiri Virtual Account:</strong> ${customer.CONTRACTACCOUNT ? `895911-${customer.CONTRACTACCOUNT}` : '-'}</p>
+                    <p><strong>MBanking UOB / Indomaret / Alfamart / Alfamidi / CK / GoPay / Tokopedia / BRIMO / DANA:</strong></p>
+                    <p><strong>Billing ID:</strong> ${customer.CONTRACTACCOUNT || '-'}</p>
+                `;
+            }
+
+            vaDetailBody.innerHTML = vaHtmlContent;
+            $('#vaModal').modal('show');
+
+            document.getElementById('downloadVaBtn').onclick = () => downloadVaAsJpg(customer);
+        }
+
+        function downloadVaAsJpg(customer) {
+            const vaModalContent = document.getElementById('vaModal').querySelector('.va-print-content'); // Target the content div
+            html2canvas(vaModalContent, {
+                scale: 2, // Increase scale for better quality
+                useCORS: true, // Allow cross-origin images if your logo is hosted elsewhere
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `VA_Customer_${(customer.BP_FULLNAME || 'Unknown').replace(/\s/g, '_')}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.click();
+            }).catch(error => {
+                console.error("Gagal membuat gambar VA:", error);
+                alert("Gagal membuat gambar VA. Silakan coba lagi. Pastikan logo-biznet-blue-trans.png berada di direktori yang sama.");
             });
         }
 
-        function applyFiltersAndSearch() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const selectedStatus = document.getElementById('statusFilter').value;
-            const selectedSalesCode = document.getElementById('salesCodeFilter').value;
+        // --- FILTERING ---
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchCustomer').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const salesCodeFilter = document.getElementById('filterSalesCode').value;
 
-            filteredCustomerData = allCustomerData.filter(customer => {
-                const matchesSearch = searchInput === '' ||
-                                      (customer.BP_FULLNAME && customer.BP_FULLNAME.toLowerCase().includes(searchInput)) ||
-                                      (customer.BP_EMAIL && customer.BP_EMAIL.toLowerCase().includes(searchInput)) ||
-                                      (customer.BUSINESSPARTNERID && String(customer.BUSINESSPARTNERID).toLowerCase().includes(searchInput));
+            filteredCustomers = allCustomers.filter(customer => {
+                const matchesSearch = searchTerm === '' ||
+                    (customer.BP_FULLNAME && customer.BP_FULLNAME.toLowerCase().includes(searchTerm)) ||
+                    (customer.BP_EMAIL && customer.BP_EMAIL.toLowerCase().includes(searchTerm)) ||
+                    (customer.BUSINESSPARTNERID && customer.BUSINESSPARTNERID.toLowerCase().includes(searchTerm));
 
-                const matchesStatus = selectedStatus === '' || (customer.STATUS && customer.STATUS === selectedStatus);
+                const matchesStatus = statusFilter === '' ||
+                    (customer.STATUS && customer.STATUS.toUpperCase() === statusFilter.toUpperCase());
 
-                const matchesSalesCode = selectedSalesCode === '' || (customer.SALESCODE && customer.SALESCODE === selectedSalesCode);
+                const matchesSalesCode = salesCodeFilter === '' ||
+                    (customer.SALESCODE && customer.SALESCODE === salesCodeFilter);
 
                 return matchesSearch && matchesStatus && matchesSalesCode;
             });
-
-            renderTable(filteredCustomerData);
-            updateCustomerCount(filteredCustomerData.length, allCustomerData.length); 
+            currentPage = 1;
+            document.getElementById('totalCustomerDisplay').textContent = `Menampilkan ${filteredCustomers.length} dari ${allCustomers.length} Customer.`;
+            renderCustomerTable(currentPage);
+            // Re-render charts only if they are visible
+            if (!document.getElementById('newCustomerAnalysis').classList.contains('d-none')) renderCustomerChart();
+            if (!document.getElementById('customerStatusAnalysis').classList.contains('d-none')) renderCustomerStatusTable();
+            if (!document.getElementById('kecamatanAnalysis').classList.contains('d-none')) renderKecamatanChart();
+            if (!document.getElementById('bundleNameAnalysis').classList.contains('d-none')) renderBundleNameChart();
+            if (!document.getElementById('modemStatusAnalysis').classList.contains('d-none')) renderModemStatusChart();
         }
 
-        function renderTable(dataToRender) {
-            const tableBody = document.getElementById('customerTable').getElementsByTagName('tbody')[0];
-            tableBody.innerHTML = ''; 
-
-            if (dataToRender.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="39" class="text-center">Tidak ada data yang ditemukan.</td></tr>';
-                return;
-            }
-
-            const headers = [
-                'BUSINESSPARTNERID', 'BP_FULLNAME', 'BP_EMAIL', 'BP_PHONE', 'CONTRACTACCOUNT', 
-                'BILLING_NAME', 'BILLING_EMAIL', 'BILLING_PHONE', 'CONTRACTNUMBER', 
-                'SERVICE_TYPE', 'SALESCODE', 'BRANCH_FROM_SALESCODE', 'RO_FROM_SALESCODE', 
-                'SM_FROM_SALESCODE', 'BUNDLE_LOB', 'BUNDLE_ID', 'BUNDLE_NAME', 'MODEM_STATUS', 
-                'PROMO_CODE', 'CONTRACTSTARTDATE', 'EXPIREDDATE', 'STATUS', 'TERMDATE', 
-                'ADDRESSID', 'ADDRESSTYPE', 'ADDRESSID_INST', 'SUBDISTRICT_INST', 
-                'DISTRICT_INST', 'CITY_INST', 'STATE_INST', 'INSTALLATION_ADDRESS1', 
-                'INSTALLATION_ADDRESS2', 'INSTALLATION_ADDRESS3', 'INSTALLATION_ADDRESS4', 
-                'MATERIAL_NAME', 'MATERIAL_DESCRIPTION', 'TOTAL_TICKET', 'MODEM_TYPE', 'DEVICE_MODEL'
-            ];
-
-            dataToRender.forEach(customer => {
-                let row = tableBody.insertRow();
-                row.dataset.customerData = JSON.stringify(customer); 
-                
-                headers.forEach(header => {
-                    let cell = row.insertCell();
-                    if (header.includes('DATE') && customer[header]) {
-                        try {
-                            const date = new Date(customer[header]);
-                            cell.textContent = date.toLocaleDateString('id-ID'); 
-                        } catch (e) {
-                            cell.textContent = customer[header] ?? ''; 
-                        }
-                    } else {
-                        cell.textContent = customer[header] ?? ''; 
-                    }
+        function populateSalesCodeFilter() {
+            const salesCodeSelect = document.getElementById('filterSalesCode');
+            salesCodeSelect.innerHTML = '<option value="">Semua Sales Code</option>';
+            // Ensure `allCustomers` is populated before trying to map and filter
+            if (allCustomers && allCustomers.length > 0) {
+                const salesCodes = [...new Set(allCustomers.map(c => c.SALESCODE).filter(Boolean))].sort();
+                salesCodes.forEach(code => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+                    salesCodeSelect.appendChild(option);
                 });
-            });
-        }
-
-        function updateCustomerCount(filteredCount, totalCount) {
-            const customerCountDiv = document.getElementById('customerCount');
-            if (filteredCount === totalCount) {
-                customerCountDiv.innerHTML = `<strong>Total Customer: ${totalCount}</strong>`;
             } else {
-                customerCountDiv.innerHTML = `<strong>Menampilkan ${filteredCount} dari ${totalCount} Customer.</strong>`;
+                console.warn("allCustomers is empty, cannot populate sales code filter.");
             }
+
+            // Populate salesCodeKecamatanFilter as well
+            const salesCodeKecamatanSelect = document.getElementById('salesCodeKecamatanFilter');
+            salesCodeKecamatanSelect.innerHTML = '<option value="">Pilih Sales Code</option>';
+            if (allCustomers && allCustomers.length > 0) {
+                 const salesCodesKecamatan = [...new Set(allCustomers.map(c => c.SALESCODE).filter(Boolean))].sort();
+                 salesCodesKecamatan.forEach(code => {
+                     const option = document.createElement('option');
+                     option.value = code;
+                     option.textContent = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+                     salesCodeKecamatanSelect.appendChild(option);
+                 });
+             }
         }
 
-        function showVaInfo(customer) {
-            const vaContentToCapture = document.getElementById('vaContentToCapture');
-            const contractAccount = customer.CONTRACTACCOUNT || '';
-            const bpFullName = customer.BP_FULLNAME || 'Tidak Diketahui';
-            let expiredDate = customer.EXPIREDDATE;
-            const bundleName = customer.BUNDLE_NAME || ''; 
-
-            if (expiredDate) {
-                try {
-                    const date = new Date(expiredDate);
-                    expiredDate = date.toLocaleDateString('id-ID'); 
-                } catch (e) {
-                    // Biarkan apa adanya jika gagal diformat
-                }
-            } else {
-                expiredDate = 'Tidak Diketahui';
-            }
-
-            let vaContentHtml = '';
-
-            // Check if BUNDLE_NAME contains "Metronet" (case-insensitive)
-            if (bundleName.toLowerCase().includes('metronet')) {
-                vaContentHtml = `
-                    <div class="va-card">
-                        <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="va-biznet-logo"> 
-                        <p class="va-title">Pembayaran melalui Virtual Account</p>
-                        <p class="va-title">Payment via Virtual Account</p>
-                        <p class="va-customer-info"><strong>Nama Customer:</strong> ${bpFullName}</p>
-                        <p class="va-customer-info"><strong>Masa aktif sampai:</strong> ${expiredDate}</p>
-                        <hr>
-                        <p class="va-bank"><strong>BCA:</strong> <br><code>711160-${contractAccount}</code></p>
-                        <p class="va-bank"><strong>Bank Permata:</strong> <br><code>883100-${contractAccount}</code></p>
-                        <p class="va-bank"><strong>Bank Mandiri:</strong> <br><code>895912-${contractAccount}</code></p>
-                        <p class="va-bank"><strong>OCBC:</strong> <br><code>903022-${contractAccount}</code></p>
-                    </div>
-                `;
-            } else {
-                // Default VA info for non-Metronet bundles
-                vaContentHtml = `
-                    <div class="va-card">
-                        <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="va-biznet-logo"> 
-                        <p class="va-title">Berikut nomor Virtual Account Pembayarannya:</p>
-                        <p class="va-customer-info"><strong>Nama Customer:</strong> ${bpFullName}</p>
-                        <p class="va-customer-info"><strong>Masa aktif sampai:</strong> ${expiredDate}</p>
-                        <hr>
-                        <p class="va-bank"><strong>Bank Permata Virtual Account:</strong> <br><code>899300-${contractAccount}</code></p>
-                        <p class="va-bank"><strong>Bank BCA Virtual Account:</strong> <br><code>711170-${contractAccount}</code></p>
-                        <p class="va-bank"><strong>Bank Mandiri Virtual Account:</strong> <br><code>895911-${contractAccount}</code></p>
-                        <p class="va-other-methods"><strong>MBanking UOB / Indomaret / Alfamart / Alfamidi / CK / GoPay / Tokopedia / BRIMO / DANA:</strong> <br>Billing ID: <code>${contractAccount}</code></p>
-                    </div>
-                `;
-            }
-
-            vaContentToCapture.innerHTML = vaContentHtml;
-            $('#vaModal').modal('show'); 
+        // --- CHARTING FUNCTIONS ---
+        function renderAllCharts() {
+            renderCustomerChart();
+            renderCustomerStatusTable();
+            renderKecamatanChart();
+            renderBundleNameChart();
+            renderModemStatusChart();
         }
 
-        document.getElementById('downloadVaJpgBtn').addEventListener('click', () => {
-            const vaContent = document.getElementById('vaContentToCapture');
-            const customerNameElement = vaContent.querySelector('.va-customer-info:first-of-type strong');
-            const customerName = customerNameElement ? customerNameElement.nextSibling.textContent.trim() : 'Customer'; 
+        function parseDate(dateString) {
+            // Assumes DD/MM/YYYY format
+            if (!dateString) return null;
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+                let year = parseInt(parts[2], 10);
 
-            const options = {
-                scale: 2, 
-                useCORS: true, 
-                backgroundColor: '#ffffff', 
-            };
-
-            html2canvas(vaContent, options).then(canvas => {
-                const imgData = canvas.toDataURL('image/jpeg', 0.9); 
-                const link = document.createElement('a');
-                link.download = `VA_${customerName.replace(/[^a-zA-Z0-9_]/g, '')}.jpg`; 
-                link.href = imgData;
-                link.click();
-            }).catch(error => {
-                console.error('Error generating image:', error);
-                alert('Gagal membuat gambar VA. Silakan coba lagi.');
-            });
-        });
-
-        // ===========================================
-        // DASHBOARD JAVASCRIPT FUNCTIONS START
-        // ===========================================
-
-        function renderSalesCodeStatusDashboard(data) {
-            const dashboardDiv = document.getElementById('salesCodeStatusDashboard');
-            dashboardDiv.innerHTML = ''; 
-
-            const statusCounts = {}; 
-
-            data.forEach(customer => {
-                const salesCode = customer.SALESCODE || 'Unknown Sales Code';
-                const status = customer.STATUS || 'Unknown Status';
-
-                if (!statusCounts[salesCode]) {
-                    statusCounts[salesCode] = {};
+                // Handle 2-digit years (e.g., 24 for 2024, 70 for 1970)
+                if (year < 100) {
+                    year = (year < 70) ? (2000 + year) : (1900 + year);
                 }
-                statusCounts[salesCode][status] = (statusCounts[salesCode][status] || 0) + 1;
-            });
-
-            const sortedSalesCodes = Object.keys(statusCounts).sort();
-
-            if (sortedSalesCodes.length === 0) {
-                dashboardDiv.innerHTML = '<p class="text-muted text-center col-12">Tidak ada data Sales Code untuk analisis status.</p>';
-                return;
-            }
-
-            for (const key in salesCodeCharts) {
-                if (salesCodeCharts[key]) {
-                    salesCodeCharts[key].destroy();
+                const date = new Date(year, month, day);
+                // Check if the date is valid
+                if (!isNaN(date.getTime())) {
+                    return date;
                 }
             }
-            salesCodeCharts = {};
-
-            sortedSalesCodes.forEach(salesCode => {
-                const salesCodeData = statusCounts[salesCode];
-                const labels = Object.keys(salesCodeData).sort(); 
-                const counts = labels.map(label => salesCodeData[label]);
-
-                const totalCustomers = counts.reduce((sum, current) => sum + current, 0);
-                if (totalCustomers === 0) return; 
-
-                // Mendapatkan nama sales person
-                const salesPersonName = salesCodeNames[salesCode] ? ` (${salesCodeNames[salesCode]})` : '';
-
-                const chartContainer = document.createElement('div');
-                chartContainer.className = 'col-lg-4 col-md-6 col-sm-12 mb-4'; 
-                chartContainer.innerHTML = `<div class="chart-card card p-3">
-                                                <h5 class="card-title text-center mb-3">Sales Code: ${salesCode}${salesPersonName} (${totalCustomers} Customer)</h5>
-                                                <canvas id="statusChart_${salesCode}"></canvas>
-                                            </div>`;
-                dashboardDiv.appendChild(chartContainer);
-
-                const ctx = document.getElementById(`statusChart_${salesCode}`).getContext('2d');
-                
-                const backgroundColors = labels.map(label => {
-                    switch(label.toLowerCase()) {
-                        case 'active': return '#28a745'; 
-                        case 'terminated': return '#dc3545'; 
-                        case 'suspended': return '#ffc107'; 
-                        default: return '#6c757d'; 
-                    }
-                });
-
-                salesCodeCharts[salesCode] = new Chart(ctx, {
-                    type: 'doughnut', 
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: counts,
-                            backgroundColor: backgroundColors,
-                            borderColor: '#fff',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    boxWidth: 15,
-                                    padding: 10
-                                }
-                            },
-                            title: {
-                                display: false, 
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(tooltipItem) {
-                                        let label = tooltipItem.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        label += tooltipItem.raw + ' (' + ((tooltipItem.raw / totalCustomers) * 100).toFixed(2) + '%)';
-                                        return label;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            });
+            return null;
         }
 
-        function renderSalesCodeSubdistrictDashboard(data) {
-            const dashboardDiv = document.getElementById('salesCodeSubdistrictDashboard');
-            dashboardDiv.innerHTML = ''; 
 
-            const subdistrictCounts = {}; 
+        function renderCustomerChart() {
+            const ctx = document.getElementById('customerChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
 
-            data.forEach(customer => {
-                const salesCode = customer.SALESCODE || 'Unknown Sales Code';
-                const subdistrict = customer.SUBDISTRICT_INST || 'Unknown Subdistrict';
-
-                if (!subdistrictCounts[salesCode]) {
-                    subdistrictCounts[salesCode] = {};
-                }
-                subdistrictCounts[salesCode][subdistrict] = (subdistrictCounts[salesCode][subdistrict] || 0) + 1;
-            });
-
-            const sortedSalesCodes = Object.keys(subdistrictCounts).sort();
-
-            if (sortedSalesCodes.length === 0) {
-                dashboardDiv.innerHTML = '<p class="text-muted text-center col-12">Tidak ada data Sales Code untuk analisis kecamatan.</p>';
-                return;
+            if (customerChartInstance) {
+                customerChartInstance.destroy();
             }
 
-            for (const key in subdistrictCharts) {
-                if (subdistrictCharts[key]) {
-                    subdistrictCharts[key].destroy();
-                }
-            }
-            subdistrictCharts = {};
+            const monthlyCustomerData = {}; // Stores { 'YYYY-MM': { 'SALESCODE': count, 'SALESCODE2': count } }
+            const allSalesCodes = new Set();
+            const allMonths = new Set();
 
-            sortedSalesCodes.forEach(salesCode => {
-                const salesCodeData = subdistrictCounts[salesCode];
-                const sortedSubdistricts = Object.entries(salesCodeData)
-                                                .sort(([,countA], [,countB]) => countB - countA) 
-                                                .slice(0, 10); 
+            filteredCustomers.forEach(customer => {
+                const contractDate = parseDate(customer.CONTRACTSTARTDATE);
+                if (contractDate) {
+                    const yearMonth = `${contractDate.getFullYear()}-${(contractDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                    allMonths.add(yearMonth);
 
-                if (sortedSubdistricts.length === 0) return; 
+                    const salesCode = customer.SALESCODE || 'Tidak Diketahui';
+                    allSalesCodes.add(salesCode);
 
-                const labels = sortedSubdistricts.map(entry => entry[0]);
-                const counts = sortedSubdistricts.map(entry => entry[1]);
-
-                // Mendapatkan nama sales person
-                const salesPersonName = salesCodeNames[salesCode] ? ` (${salesCodeNames[salesCode]})` : '';
-
-                const chartContainer = document.createElement('div');
-                chartContainer.className = 'col-lg-6 col-md-12 mb-4'; 
-                chartContainer.innerHTML = `<div class="chart-card card p-3">
-                                                <h5 class="card-title text-center mb-3">Sales Code: ${salesCode}${salesPersonName} - Top 10 Kecamatan</h5>
-                                                <canvas id="subdistrictChart_${salesCode}"></canvas>
-                                            </div>`;
-                dashboardDiv.appendChild(chartContainer);
-
-                const ctx = document.getElementById(`subdistrictChart_${salesCode}`).getContext('2d');
-                
-                subdistrictCharts[salesCode] = new Chart(ctx, {
-                    type: 'bar', 
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Jumlah Customer',
-                            data: counts,
-                            backgroundColor: 'rgba(0, 123, 255, 0.7)', 
-                            borderColor: 'rgba(0, 123, 255, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        indexAxis: 'y', 
-                        plugins: {
-                            legend: {
-                                display: false, 
-                            },
-                            title: {
-                                display: false, 
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0 
-                                }
-                            },
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
+                    if (!monthlyCustomerData[yearMonth]) {
+                        monthlyCustomerData[yearMonth] = {};
                     }
-                });
-            });
-        }
-
-        function renderMonthlySalesChart(data) {
-            const dashboardDiv = document.getElementById('monthlyNewCustomersDashboard');
-            // Recreate canvas to prevent Chart.js issues
-            dashboardDiv.innerHTML = '<div class="col-12 chart-card-lg"><canvas id="monthlySalesChart"></canvas></div>'; 
-
-            const monthlySales = {}; 
-            const salesCodes = new Set();
-
-            data.forEach(customer => {
-                const contractStartDate = customer.CONTRACTSTARTDATE;
-                const salesCode = customer.SALESCODE || 'Unknown Sales Code';
-
-                if (contractStartDate) {
-                    try {
-                        const date = new Date(contractStartDate);
-                        const year = date.getFullYear();
-                        const month = date.getMonth() + 1; 
-                        const monthKey = `${year}-${String(month).padStart(2, '0')}`; 
-
-                        if (!monthlySales[monthKey]) {
-                            monthlySales[monthKey] = {};
-                        }
-                        monthlySales[monthKey][salesCode] = (monthlySales[monthKey][salesCode] || 0) + 1;
-                        salesCodes.add(salesCode);
-                    } catch (e) {
-                        console.warn('Invalid CONTRACTSTARTDATE format:', contractStartDate, e);
-                    }
+                    monthlyCustomerData[yearMonth][salesCode] = (monthlyCustomerData[yearMonth][salesCode] || 0) + 1;
                 }
             });
 
-            const sortedMonths = Object.keys(monthlySales).sort();
-            const sortedSalesCodes = Array.from(salesCodes).sort();
+            const sortedMonths = Array.from(allMonths).sort();
+            const sortedSalesCodes = Array.from(allSalesCodes).sort((a, b) => {
+                // Sort 'Tidak Diketahui' last
+                if (a === 'Tidak Diketahui') return 1;
+                if (b === 'Tidak Diketahui') return -1;
+                return a.localeCompare(b);
+            });
 
-            if (sortedMonths.length === 0 || sortedSalesCodes.length === 0) {
-                dashboardDiv.innerHTML = '<div class="col-12 chart-card-lg"><p class="text-muted text-center">Tidak ada data penjualan bulanan.</p></div>';
-                return;
-            }
-
-            if (monthlySalesChartInstance) {
-                monthlySalesChartInstance.destroy();
-            }
-
-            const ctx = document.getElementById('monthlySalesChart').getContext('2d');
-            const datasets = [];
-
-            const generateColor = (index) => {
-                const colors = [
-                    '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8', '#fd7e14', '#e83e8c', '#6c757d', '#20c997'
-                ];
-                return colors[index % colors.length];
-            };
-
-            sortedSalesCodes.forEach((salesCode, index) => {
-                const dataPoints = sortedMonths.map(month => monthlySales[month][salesCode] || 0);
-                const color = generateColor(index);
-                const salesPersonName = salesCodeNames[salesCode] ? ` (${salesCodeNames[salesCode]})` : ''; // Mendapatkan nama sales
-                datasets.push({
-                    label: `${salesCode}${salesPersonName}`, // Menggabungkan sales code dan nama sales
-                    data: dataPoints,
-                    borderColor: color,
-                    backgroundColor: color + '40', 
+            const datasets = sortedSalesCodes.map(salesCode => {
+                const data = sortedMonths.map(month => monthlyCustomerData[month] ? (monthlyCustomerData[month][salesCode] || 0) : 0);
+                return {
+                    label: salesCodeNames[salesCode] ? `${salesCodeNames[salesCode]} (${salesCode})` : salesCode,
+                    data: data,
                     fill: false,
-                    tension: 0.1, 
-                    borderWidth: 2
-                });
+                    tension: 0.1,
+                    borderColor: getRandomColor(),
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                };
             });
 
-            monthlySalesChartInstance = new Chart(ctx, {
+            customerChartInstance = new Chart(context, {
                 type: 'line',
                 data: {
                     labels: sortedMonths,
@@ -775,19 +767,20 @@
                         legend: {
                             position: 'top',
                         },
-                        title: {
-                            display: false, 
-                        },
                         tooltip: {
-                            mode: 'index',
-                            intersect: false,
                             callbacks: {
-                                label: function(tooltipItem) {
-                                    const label = tooltipItem.dataset.label || '';
-                                    const value = tooltipItem.raw;
-                                    return `${label}: ${value} Customer`;
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw;
+                                    return label;
                                 }
                             }
+                        },
+                        title: {
+                            display: false,
                         }
                     },
                     scales: {
@@ -798,108 +791,253 @@
                             }
                         },
                         y: {
-                            beginAtZero: true,
                             title: {
                                 display: true,
                                 text: 'Jumlah Customer Baru'
                             },
+                            beginAtZero: true,
                             ticks: {
-                                precision: 0 
+                                precision: 0
                             }
                         }
                     },
-                    onClick: (evt, element) => {
-                        if (element.length > 0) {
-                            const datasetIndex = element[0].datasetIndex;
-                            const index = element[0].index;
-                            const labelMonth = monthlySalesChartInstance.data.labels[index];
-                            const salesCodeClickedWithAlias = monthlySalesChartInstance.data.datasets[datasetIndex].label;
-                            // Ekstrak hanya sales code dari label alias (misal "200602 (Riski Aprianto)")
-                            const salesCodeClicked = salesCodeClickedWithAlias.split(' ')[0];
-                            showMonthlyCustomerDetails(labelMonth, salesCodeClicked);
+                    // Add onClick event to the chart
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0) {
+                            const firstElement = elements[0];
+                            const datasetIndex = firstElement.datasetIndex;
+                            const dataIndex = firstElement.index;
+
+                            const clickedSalesCode = sortedSalesCodes[datasetIndex];
+                            const clickedMonth = sortedMonths[dataIndex];
+
+                            showCustomersForChartPoint(clickedSalesCode, clickedMonth);
                         }
                     }
                 }
             });
+            document.getElementById('customerChartError').classList.add('d-none');
         }
 
-        function showMonthlyCustomerDetails(monthYear, salesCode) {
-            const [year, month] = monthYear.split('-');
-            const monthName = new Date(year, parseInt(month) - 1, 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-            const salesPersonName = salesCodeNames[salesCode] ? ` (${salesCodeNames[salesCode]})` : ''; // Mendapatkan nama sales
+        function showCustomersForChartPoint(salesCode, month) {
+            const [year, monthNum] = month.split('-').map(Number);
 
-            document.getElementById('monthlyDetailTitle').textContent = `Customer Baru untuk Sales Code: ${salesCode}${salesPersonName} di Bulan ${monthName}`;
-            const detailTableBody = document.getElementById('monthlyCustomerDetailTable').getElementsByTagName('tbody')[0];
-            detailTableBody.innerHTML = ''; 
+            const relevantCustomers = filteredCustomers.filter(customer => {
+                const contractDate = parseDate(customer.CONTRACTSTARTDATE);
+                if (contractDate) {
+                    const customerYear = contractDate.getFullYear();
+                    const customerMonth = contractDate.getMonth() + 1;
+                    const customerSalesCode = customer.SALESCODE || 'Tidak Diketahui';
 
-            const filteredDetails = allCustomerData.filter(customer => {
-                if (!customer.CONTRACTSTARTDATE || !customer.SALESCODE) return false;
-
-                try {
-                    const date = new Date(customer.CONTRACTSTARTDATE);
-                    const customerMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                    return customerMonthKey === monthYear && customer.SALESCODE === salesCode;
-                } catch (e) {
-                    return false;
+                    return customerYear === year && customerMonth === monthNum && customerSalesCode === salesCode;
                 }
+                return false;
             });
 
-            if (filteredDetails.length === 0) {
-                detailTableBody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada customer ditemukan untuk kriteria ini.</td></tr>';
+            const modalBodyTable = document.querySelector('#chartDetailModal #chartCustomerDetailTable tbody');
+            modalBodyTable.innerHTML = ''; // Clear previous data
+
+            if (relevantCustomers.length === 0) {
+                modalBodyTable.innerHTML = `<tr><td colspan="7" class="text-center">Tidak ada customer untuk kriteria ini.</td></tr>`;
             } else {
-                filteredDetails.forEach(customer => {
-                    let row = detailTableBody.insertRow();
-                    row.insertCell().textContent = customer.BUSINESSPARTNERID ?? '';
-                    row.insertCell().textContent = customer.BP_FULLNAME ?? '';
-                    row.insertCell().textContent = customer.BP_EMAIL ?? '';
-                    row.insertCell().textContent = customer.BP_PHONE ?? '';
-                    row.insertCell().textContent = customer.CONTRACTSTARTDATE ? new Date(customer.CONTRACTSTARTDATE).toLocaleDateString('id-ID') : '';
-                    row.insertCell().textContent = customer.SALESCODE ?? '';
-                    row.insertCell().textContent = customer.STATUS ?? '';
-                    row.insertCell().textContent = customer.SUBDISTRICT_INST ?? '';
+                relevantCustomers.forEach(customer => {
+                    const row = modalBodyTable.insertRow();
+                    row.insertCell().textContent = customer.BP_FULLNAME || '-';
+                    row.insertCell().textContent = customer.CONTRACTNUMBER || '-';
+                    row.insertCell().textContent = salesCodeNames[customer.SALESCODE] ? `${salesCodeNames[customer.SALESCODE]} (${customer.SALESCODE})` : customer.SALESCODE || '-';
+                    row.insertCell().textContent = customer.CONTRACTSTARTDATE || '-';
+                    row.insertCell().textContent = customer.STATUS || '-';
+                    row.insertCell().textContent = customer.BUNDLE_NAME || '-';
+                    row.insertCell().textContent = customer.SUBDISTRICT_INST || '-';
+                    // Add more cells for more detail as needed
                 });
             }
 
-            $('#monthlyCustomerDetailModal').modal('show');
+            document.getElementById('chartDetailModalLabel').textContent = `Customer Baru untuk ${salesCodeNames[salesCode] ? `${salesCodeNames[salesCode]} (${salesCode})` : salesCode} pada Bulan ${month}`;
+            $('#chartDetailModal').modal('show');
         }
 
-        // --- REVENUE CHART FUNCTIONS ---
 
-        function renderQuarterlyRevenueChart(data) {
-            const chartCanvasContainer = document.getElementById('quarterlyRevenueChart').parentNode;
-            chartCanvasContainer.innerHTML = '<canvas id="quarterlyRevenueChart"></canvas>'; // Recreate canvas element
-            const ctx = document.getElementById('quarterlyRevenueChart').getContext('2d');
+        function renderCustomerStatusTable() {
+            const tableBody = document.querySelector('#customerStatusTable tbody');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
 
-            const quarterlyRevenue = {}; // { 'YYYY-Qn': totalRevenue }
+            const statusBySalesCode = {};
+            filteredCustomers.forEach(customer => {
+                const salesCode = customer.SALESCODE || 'Tidak Diketahui';
+                const status = customer.STATUS || 'Tidak Diketahui';
 
-            data.forEach(item => {
-                const year = item.tahun; 
-                const quarter = item.quartal; 
-                const revenue = parseFloat(item.revenue) || 0; 
-
-                if (year && quarter) {
-                    const quarterKey = `${year}-${quarter}`;
-                    quarterlyRevenue[quarterKey] = (quarterlyRevenue[quarterKey] || 0) + revenue;
+                if (!statusBySalesCode[salesCode]) {
+                    statusBySalesCode[salesCode] = { ACTIVE: 0, SUSPENDED: 0, TERMINATED: 0, 'Tidak Diketahui': 0, Total: 0 };
                 }
+                statusBySalesCode[salesCode][status]++;
+                statusBySalesCode[salesCode].Total++;
             });
 
-            const sortedQuarters = Object.keys(quarterlyRevenue).sort();
-            const labels = sortedQuarters.map(key => key); // e.g., "2023-Q1"
-            const revenues = sortedQuarters.map(key => quarterlyRevenue[key]);
+            const sortedSalesCodes = Object.keys(statusBySalesCode).sort();
 
-            if (quarterlyRevenueChartInstance) {
-                quarterlyRevenueChartInstance.destroy();
+            if (sortedSalesCodes.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center">Tidak ada data status customer yang ditemukan.</td></tr>`;
+            } else {
+                sortedSalesCodes.forEach(salesCode => {
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = salesCodeNames[salesCode] ? `${salesCodeNames[salesCode]} (${salesCode})` : salesCode;
+                    row.insertCell().textContent = statusBySalesCode[salesCode].ACTIVE;
+                    row.insertCell().textContent = statusBySalesCode[salesCode].SUSPENDED;
+                    row.insertCell().textContent = statusBySalesCode[salesCode].TERMINATED;
+                    row.insertCell().textContent = statusBySalesCode[salesCode].Total;
+                });
+            }
+            document.getElementById('customerStatusError').classList.add('d-none');
+        }
+
+        function renderKecamatanChart() {
+            const ctx = document.getElementById('kecamatanChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+
+            if (kecamatanChartInstance) {
+                kecamatanChartInstance.destroy();
             }
 
-            quarterlyRevenueChartInstance = new Chart(ctx, {
+            const salesCodeKecamatanFilter = document.getElementById('salesCodeKecamatanFilter');
+            let selectedSalesCode = salesCodeKecamatanFilter.value;
+
+            // If no sales code is selected initially, select the first available one
+            if (!selectedSalesCode && salesCodeKecamatanFilter.options.length > 1) {
+                selectedSalesCode = salesCodeKecamatanFilter.options[1].value;
+                salesCodeKecamatanFilter.value = selectedSalesCode;
+            }
+
+            const customerInSelectedSalesCode = filteredCustomers.filter(c => c.SALESCODE === selectedSalesCode);
+            const kecamatanCounts = {};
+            customerInSelectedSalesCode.forEach(customer => {
+                const kecamatan = customer.SUBDISTRICT_INST || 'Tidak Diketahui';
+                kecamatanCounts[kecamatan] = (kecamatanCounts[kecamatan] || 0) + 1;
+            });
+
+            const sortedKecamatans = Object.keys(kecamatanCounts).sort((a, b) => kecamatanCounts[b] - kecamatanCounts[a]);
+            const labels = sortedKecamatans;
+            const data = sortedKecamatans.map(kec => kecamatanCounts[kec]);
+
+            // If no data, display a message
+            if (data.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                document.getElementById('kecamatanChartError').classList.remove('d-none');
+                document.getElementById('kecamatanChartError').textContent = 'Tidak ada data kecamatan untuk Sales Code ini.';
+                return;
+            } else {
+                document.getElementById('kecamatanChartError').classList.add('d-none');
+            }
+
+
+            kecamatanChartInstance = new Chart(context, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Total Revenue',
-                        data: revenues,
+                        label: 'Jumlah Customer',
+                        data: data,
                         backgroundColor: 'rgba(54, 162, 235, 0.7)',
                         borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bar chart
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: `Distribusi Customer per Kecamatan untuk ${salesCodeNames[selectedSalesCode] ? `${salesCodeNames[selectedSalesCode]} (${selectedSalesCode})` : selectedSalesCode}`
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'end',
+                            formatter: (value) => value,
+                            color: '#333'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw;
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Jumlah Customer'
+                            },
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Kecamatan'
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+
+        function renderBundleNameChart() {
+            const ctx = document.getElementById('bundleNameChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+
+            if (bundleNameChartInstance) {
+                bundleNameChartInstance.destroy();
+            }
+
+            const bundleNameCounts = {};
+            filteredCustomers.forEach(customer => {
+                const bundleName = customer.BUNDLE_NAME || 'Tidak Diketahui';
+                bundleNameCounts[bundleName] = (bundleNameCounts[bundleName] || 0) + 1;
+            });
+
+            const sortedBundleNames = Object.keys(bundleNameCounts).sort((a, b) => bundleNameCounts[b] - bundleNameCounts[a]);
+            const labels = sortedBundleNames;
+            const data = sortedBundleNames.map(name => bundleNameCounts[name]);
+            const backgroundColors = labels.map(() => getRandomColor(0.7)); // Adjusted opacity
+            const borderColors = backgroundColors.map(color => color.replace('0.7', '1'));
+
+            if (data.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                document.getElementById('bundleNameError').classList.remove('d-none');
+                document.getElementById('bundleNameError').textContent = 'Tidak ada data Bundle Name yang ditemukan.';
+                return;
+            } else {
+                document.getElementById('bundleNameError').classList.add('d-none');
+            }
+
+            bundleNameChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah Customer',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
                         borderWidth: 1
                     }]
                 },
@@ -908,86 +1046,96 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false,
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribusi Customer per Tipe Bundle Name'
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'end',
+                            formatter: (value) => value,
+                            color: '#333'
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(tooltipItem) {
-                                    return 'Revenue: ' + tooltipItem.raw.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw;
+                                    return label;
                                 }
                             }
                         }
                     },
                     scales: {
                         x: {
-                            title: {
-                                display: true,
-                                text: 'Kuartal'
-                            }
-                        },
-                        y: {
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Revenue (IDR)'
+                                text: 'Tipe Bundle Name'
                             },
                             ticks: {
-                                callback: function(value, index, values) {
-                                    // Format tick labels as IDR without currency symbol for readability on axis
-                                    return value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); 
-                                }
+                                precision: 0
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Jumlah Customer'
+                            },
+                            ticks: {
+                                precision: 0
                             }
                         }
                     }
-                }
+                },
+                plugins: [ChartDataLabels]
             });
         }
 
-        function renderMonthlyRevenueChart(data) {
-            const chartCanvasContainer = document.getElementById('monthlyRevenueChart').parentNode;
-            chartCanvasContainer.innerHTML = '<canvas id="monthlyRevenueChart"></canvas>'; // Recreate canvas element
-            const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
+        function renderModemStatusChart() {
+            const ctx = document.getElementById('modemStatusChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
 
-            const monthlyRevenue = {}; // { 'YYYY-MM': totalRevenue }
-
-            data.forEach(item => {
-                const year = item.tahun;
-                const monthName = item.bulan;
-                const revenue = parseFloat(item.revenue) || 0;
-
-                // Map month name to month number (0-11 for Date object, 1-12 for MM format)
-                const monthNames = ["jan", "feb", "mar", "apr", "mei", "jun", "jul", "agu", "sep", "okt", "nov", "des"];
-                const monthNum = monthNames.indexOf(monthName.toLowerCase()); // 0-indexed for Date object
-
-                if (year && monthNum !== -1) {
-                    const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`; //YYYY-MM format for sorting
-                    monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + revenue;
-                }
-            });
-
-            const sortedMonths = Object.keys(monthlyRevenue).sort();
-            const labels = sortedMonths.map(key => {
-                const [year, month] = key.split('-');
-                const date = new Date(year, parseInt(month) - 1, 1); // Month is 0-indexed for Date
-                return date.toLocaleString('id-ID', { month: 'short', year: 'numeric' }); // e.g., "Jun 2023"
-            });
-            const revenues = sortedMonths.map(key => monthlyRevenue[key]);
-
-            if (monthlyRevenueChartInstance) {
-                monthlyRevenueChartInstance.destroy();
+            if (modemStatusChartInstance) {
+                modemStatusChartInstance.destroy();
             }
 
-            monthlyRevenueChartInstance = new Chart(ctx, {
-                type: 'line',
+            const modemStatusCounts = {};
+            filteredCustomers.forEach(customer => {
+                const modemStatus = customer.MODEM_STATUS || 'Tidak Diketahui';
+                modemStatusCounts[modemStatus] = (modemStatusCounts[modemStatus] || 0) + 1;
+            });
+
+            const labels = Object.keys(modemStatusCounts);
+            const data = Object.values(modemStatusCounts);
+            const backgroundColors = labels.map(() => getRandomColor(0.7));
+            const borderColors = backgroundColors.map(color => color.replace('0.7', '1'));
+
+            if (data.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                document.getElementById('modemStatusError').classList.remove('d-none');
+                document.getElementById('modemStatusError').textContent = 'Tidak ada data Status Modem yang ditemukan.';
+                return;
+            } else {
+                document.getElementById('modemStatusError').classList.add('d-none');
+            }
+
+            modemStatusChartInstance = new Chart(context, {
+                type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Total Revenue',
-                        data: revenues,
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.4)',
-                        fill: true,
-                        tension: 0.1
+                        label: 'Jumlah Customer',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -995,87 +1143,68 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false,
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribusi Customer per Status Modem'
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            formatter: (value, ctx) => {
+                                let sum = 0;
+                                let dataArr = ctx.chart.data.datasets[0].data;
+                                dataArr.map(data => {
+                                    sum += data;
+                                });
+                                let percentage = (value * 100 / sum).toFixed(1) + "%"; // 1 decimal place
+                                return `${ctx.chart.data.labels[ctx.dataIndex]}: ${percentage}`; // Label: Percentage
+                            }
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(tooltipItem) {
-                                    return 'Revenue: ' + tooltipItem.raw.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Bulan'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Revenue (IDR)'
-                            },
-                            ticks: {
-                                callback: function(value, index, values) {
-                                    return value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw;
+                                    let sum = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = (context.raw * 100 / sum).toFixed(1) + "%";
+                                    return `${label} (${percentage})`;
                                 }
                             }
                         }
                     }
-                }
+                },
+                plugins: [ChartDataLabels]
             });
         }
 
 
-        // ===========================================
-        // DASHBOARD JAVASCRIPT FUNCTIONS END
-        // ===========================================
+        function getRandomColor(alpha = 1) {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // --- EVENT LISTENERS & INITIAL LOAD ---
+        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+        document.getElementById('searchCustomer').addEventListener('input', applyFilters);
+        document.getElementById('filterStatus').addEventListener('change', applyFilters);
+        document.getElementById('filterSalesCode').addEventListener('change', applyFilters);
+        document.getElementById('salesCodeKecamatanFilter').addEventListener('change', renderKecamatanChart);
 
 
-        // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
-            fetchCustomerData(); 
-
-            document.getElementById('searchInput').addEventListener('keyup', applyFiltersAndSearch);
-            document.getElementById('statusFilter').addEventListener('change', applyFiltersAndSearch);
-            document.getElementById('salesCodeFilter').addEventListener('change', applyFiltersAndSearch);
-            document.getElementById('resetFilters').addEventListener('click', () => {
-                document.getElementById('searchInput').value = '';
-                document.getElementById('statusFilter').value = '';
-                document.getElementById('salesCodeFilter').value = '';
-                applyFiltersAndSearch();
+            fetchCustomerData();
+            // Sidebar toggle functionality
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
             });
-
-            document.getElementById('customerTable').addEventListener('click', (event) => {
-                const clickedRow = event.target.closest('tr'); 
-                if (clickedRow && clickedRow.dataset.customerData) {
-                    const customer = JSON.parse(clickedRow.dataset.customerData);
-                    showVaInfo(customer);
-                }
-            });
-
-            // New: Toggle buttons for dashboards
-            const customerDashboardSection = document.getElementById('customerDashboardSection');
-            const revenueDashboardSection = document.getElementById('revenueDashboardSection');
-
-            document.getElementById('toggleCustomerDashboardBtn').addEventListener('click', () => {
-                customerDashboardSection.classList.toggle('d-none');
-                revenueDashboardSection.classList.add('d-none'); // Hide revenue if customer is shown
-            });
-
-            document.getElementById('toggleRevenueDashboardBtn').addEventListener('click', () => {
-                revenueDashboardSection.classList.toggle('d-none');
-                customerDashboardSection.classList.add('d-none'); // Hide customer if revenue is shown
-            });
-
-            // Initially show customer dashboard, hide revenue dashboard
-            customerDashboardSection.classList.remove('d-none');
-            revenueDashboardSection.classList.add('d-none');
+            showSection('customerOverview'); // Show customer overview by default
         });
-
     </script>
 </body>
 </html>
