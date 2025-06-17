@@ -1,0 +1,70 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background-color: #e9ecef; /* Latar belakang abu-abu muda */
+    color: #343a40; /* Warna teks gelap */
+}
+
+.container {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+h1 {
+    color: #007bff; /* Warna biru untuk judul */
+    font-weight: 600;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    display: inline-block; /* Agar border-bottom hanya selebar teks */
+}
+
+.table-responsive {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Bayangan lebih halus */
+    border-radius: 8px; /* Sudut membulat */
+    overflow-x: auto; /* Pastikan tabel bisa di-scroll horizontal */
+}
+
+.table {
+    margin-bottom: 0; /* Hapus margin bawah default tabel Bootstrap */
+}
+
+.table thead th {
+    background-color: #007bff; /* Biru cerah untuk header */
+    color: white;
+    font-weight: bold;
+    text-align: center; /* Teks header di tengah */
+    vertical-align: middle; /* Posisi teks vertikal di tengah */
+    white-space: nowrap; /* Cegah teks header pecah baris */
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f8f9fa; /* Warna latar belakang baris genap lebih terang */
+}
+
+.table tbody tr:hover {
+    background-color: #e2f0ff; /* Warna latar belakang saat hover */
+    cursor: pointer;
+}
+
+.table tbody td {
+    padding: 10px;
+    vertical-align: middle;
+    white-space: nowrap; /* Cegah teks data pecah baris */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Tampilkan ... jika teks terlalu panjang */
+    max-width: 150px; /* Batasi lebar kolom agar tidak terlalu lebar */
+}
+
+/* Sesuaikan lebar kolom tertentu jika diperlukan */
+.table tbody td:nth-child(2), /* BP_FULLNAME */
+.table tbody td:nth-child(3)  /* BP_EMAIL */ {
+    max-width: 250px; 
+    white-space: normal; /* Biarkan teks pecah baris jika perlu untuk nama/email */
+}
+
+/* Styling untuk pesan loading/error */
+.text-center.text-danger {
+    padding: 20px;
+    font-weight: bold;
+}

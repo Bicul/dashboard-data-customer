@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Data Customer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Data Customer Terbaru</h1>
+        <div class="table-responsive">
+            <table id="customerTable" class="table table-striped table-bordered table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>BUSINESSPARTNERID</th>
+                        <th>BP_FULLNAME</th>
+                        <th>BP_EMAIL</th>
+                        <th>BP_PHONE</th>
+                        <th>CONTRACTACCOUNT</th>
+                        <th>BILLING_NAME</th>
+                        <th>BILLING_EMAIL</th>
+                        <th>BILLING_PHONE</th>
+                        <th>CONTRACTNUMBER</th>
+                        <th>SERVICE_TYPE</th>
+                        <th>SALESCODE</th>
+                        <th>BRANCH_FROM_SALESCODE</th>
+                        <th>RO_FROM_SALESCODE</th>
+                        <th>SM_FROM_SALESCODE</th>
+                        <th>BUNDLE_LOB</th>
+                        <th>BUNDLE_ID</th>
+                        <th>BUNDLE_NAME</th>
+                        <th>MODEM_STATUS</th>
+                        <th>PROMO_CODE</th>
+                        <th>CONTRACTSTARTDATE</th>
+                        <th>EXPIREDDATE</th>
+                        <th>STATUS</th>
+                        <th>TERMDATE</th>
+                        <th>ADDRESSID</th>
+                        <th>ADDRESSTYPE</th>
+                        <th>ADDRESSID_INST</th>
+                        <th>SUBDISTRICT_INST</th>
+                        <th>DISTRICT_INST</th>
+                        <th>CITY_INST</th>
+                        <th>STATE_INST</th>
+                        <th>INSTALLATION_ADDRESS1</th>
+                        <th>INSTALLATION_ADDRESS2</th>
+                        <th>INSTALLATION_ADDRESS3</th>
+                        <th>INSTALLATION_ADDRESS4</th>
+                        <th>MATERIAL_NAME</th>
+                        <th>MATERIAL_DESCRIPTION</th>
+                        <th>TOTAL_TICKET</th>
+                        <th>MODEM_TYPE</th>
+                        <th>DEVICE_MODEL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="38" class="text-center">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="errorMessage" class="alert alert-danger d-none" role="alert">
+            Gagal memuat data customer. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.
+        </div>
+    </div>
+
+    <script>
+        // PASTE URL APLIKASI WEB ANDA DI SINI
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbyPq6xvW3e3FoHozo2M0ZW3ScgNVvRs4ZYNVM44L54ZvTPn94KGlngdyAxwIQMbYhU_Lw/exec'; 
+
+        async function fetchCustomerData() {
+            const tableBody = document.getElementById('customerTable').getElementsByTagName('tbody')[0];
+            const errorMessageDiv = document.getElementById('errorMessage');
+            tableBody.innerHTML = '<tr><td colspan="38" class="text-center">Memuat data...</td></tr>'; // Tampilkan pesan loading
+
+            try {
+                const response = await fetch(webAppUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (data.error) { // Cek jika ada error dari Apps Script (misal: sheet kosong)
+                    throw new Error(data.error);
+                }
+
+                tableBody.innerHTML = ''; // Kosongkan pesan loading
+
+                // Periksa apakah data ada dan merupakan array
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(customer => {
+                        let row = tableBody.insertRow();
+                        // Urutan kolom sesuai dengan header di HTML
+                        const headers = [
+                            'BUSINESSPARTNERID', 'BP_FULLNAME', 'BP_EMAIL', 'BP_PHONE', 'CONTRACTACCOUNT', 
+                            'BILLING_NAME', 'BILLING_EMAIL', 'BILLING_PHONE', 'CONTRACTNUMBER', 
+                            'SERVICE_TYPE', 'SALESCODE', 'BRANCH_FROM_SALESCODE', 'RO_FROM_SALESCODE', 
+                            'SM_FROM_SALESCODE', 'BUNDLE_LOB', 'BUNDLE_ID', 'BUNDLE_NAME', 'MODEM_STATUS', 
+                            'PROMO_CODE', 'CONTRACTSTARTDATE', 'EXPIREDDATE', 'STATUS', 'TERMDATE', 
+                            'ADDRESSID', 'ADDRESSTYPE', 'ADDRESSID_INST', 'SUBDISTRICT_INST', 
+                            'DISTRICT_INST', 'CITY_INST', 'STATE_INST', 'INSTALLATION_ADDRESS1', 
+                            'INSTALLATION_ADDRESS2', 'INSTALLATION_ADDRESS3', 'INSTALLATION_ADDRESS4', 
+                            'MATERIAL_NAME', 'MATERIAL_DESCRIPTION', 'TOTAL_TICKET', 'MODEM_TYPE', 'DEVICE_MODEL'
+                        ];
+
+                        headers.forEach(header => {
+                            let cell = row.insertCell();
+                            // Gunakan operator nullish coalescing (?? '') untuk menangani nilai null/undefined
+                            cell.textContent = customer[header] ?? ''; 
+                        });
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="38" class="text-center">Tidak ada data customer.</td></tr>';
+                }
+                errorMessageDiv.classList.add('d-none'); // Sembunyikan pesan error jika berhasil
+            } catch (error) {
+                console.error('Error fetching customer data:', error);
+                tableBody.innerHTML = '<tr><td colspan="38" class="text-center text-danger">Error memuat data.</td></tr>';
+                errorMessageDiv.textContent = `Gagal memuat data: ${error.message}. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.`;
+                errorMessageDiv.classList.remove('d-none'); // Tampilkan pesan error
+            }
+        }
+
+        // Panggil fungsi untuk memuat data saat halaman dimuat
+        fetchCustomerData();
+    </script>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
