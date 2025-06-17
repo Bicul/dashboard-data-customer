@@ -4,269 +4,248 @@
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
-    background-color: #F0F2F5; /* Latar belakang abu-abu muda modern */
+    background-color: #F8F9FA; /* Latar belakang abu-abu muda modern */
     color: #333;
     line-height: 1.6;
 }
 
 .app-header {
-    background-color: #004B9B; /* Biru gelap Biznet */
+    background-color: #004B90; /* Warna biru gelap Biznet */
     color: white;
-    padding: 15px 20px; /* Tambah padding horizontal */
+    padding: 15px 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: flex; /* Gunakan flexbox untuk header */
-    justify-content: space-between; /* Untuk menyebar item */
-    align-items: center; /* Untuk menengahkan item secara vertikal */
-    flex-wrap: wrap; /* Izinkan wrapping pada layar kecil */
-    gap: 10px; /* Spasi antar item di header */
 }
 
-.app-logo {
-    height: 40px; /* Sesuaikan tinggi logo */
-    margin-right: 15px; /* Spasi setelah logo */
-}
-
-.app-title {
-    margin: 0;
-    font-size: 1.8rem; /* Ukuran font judul */
-    flex-grow: 1; /* Biarkan judul mengambil ruang yang tersedia */
-    text-align: center; /* Tengahkan judul */
-    color: white;
-}
-
-/* Styles for the toggle buttons in header */
-.toggle-dashboard-btn {
-    border-color: white;
-    color: white;
-    transition: all 0.3s ease;
-    margin-left: 10px; /* Tambah margin antar tombol */
-    font-size: 0.9rem; /* Kecilkan sedikit ukuran font tombol */
-    padding: 8px 15px; /* Sesuaikan padding tombol */
-    white-space: nowrap; /* Mencegah teks tombol pecah baris */
-}
-
-.toggle-dashboard-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-/* Ensure the main content has top margin to clear header */
-.main-content {
-    padding-top: 20px; /* Sesuaikan sesuai kebutuhan */
-}
-
-/* Card and Section Titles */
-.section-title, .card-title {
-    color: #004B9B; /* Warna judul sesuai tema Biznet */
-    font-weight: 600;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-/* Form Controls */
-.form-label {
+.navbar-title {
+    color: #004B90; /* Warna biru Biznet untuk judul */
     font-weight: bold;
-    color: #555;
 }
 
-.form-control, .input-group-text {
-    border-radius: 5px;
+/* Wrapper and Sidebar */
+.wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
 }
 
-.input-group-prepend .input-group-text {
-    background-color: #e9ecef;
-    border-right: none;
-    color: #495057;
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background: #004B90; /* Warna biru gelap Biznet */
+    color: #fff;
+    transition: all 0.3s;
+    height: 100vh; /* Full height */
+    position: sticky; /* Sticky sidebar */
+    top: 0; /* Align to top */
+    z-index: 1000; /* Ensure it stays on top */
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
 }
 
-/* Table Styling */
-.app-table-container {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    overflow-x: auto; /* Untuk membuat tabel bisa di-scroll secara horizontal */
-    margin-bottom: 20px;
+#sidebar.active {
+    margin-left: -250px; /* Hide sidebar */
 }
 
-#customerTable {
-    width: 100%; /* Pastikan tabel mengisi lebar container */
-    margin-bottom: 0; /* Hapus margin bawah default tabel */
-    border-collapse: separate; /* Penting untuk border-radius di tbody */
-    border-spacing: 0;
-}
-
-#customerTable thead th {
-    background-color: #004B9B; /* Warna header tabel Biznet */
-    color: white;
-    font-weight: 600;
-    white-space: nowrap; /* Mencegah teks header pecah baris */
-    padding: 12px 15px;
-    border-bottom: none; /* Hapus border bawah di thead untuk tampilan lebih bersih */
-}
-
-/* Rounded corners for top-left and top-right header cells */
-#customerTable thead th:first-child {
-    border-top-left-radius: 8px;
-}
-
-#customerTable thead th:last-child {
-    border-top-right-radius: 8px;
-}
-
-#customerTable tbody tr:hover {
-    background-color: #e9f5ff; /* Light blue on hover */
-    cursor: pointer;
-}
-
-#customerTable tbody td {
-    padding: 10px 15px;
-    border-top: 1px solid #dee2e6; /* Border antar baris */
-    white-space: nowrap; /* Mencegah teks sel pecah baris */
-    overflow: hidden;
-    text-overflow: ellipsis; /* Menambahkan elipsis jika teks terlalu panjang */
-    max-width: 200px; /* Batasi lebar sel agar tidak terlalu lebar */
-}
-
-#customerTable tbody tr:last-child td {
-    border-bottom: none; /* Hapus border bawah di baris terakhir tbody */
-}
-
-/* VA Modal Styling */
-.va-card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
+#sidebar .sidebar-header {
     padding: 20px;
+    background: #003F7A; /* Warna biru sedikit lebih gelap */
     text-align: center;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.va-biznet-logo {
-    max-height: 60px;
+#sidebar .sidebar-logo {
+    max-width: 80px;
+    margin-bottom: 10px;
+}
+
+#sidebar ul.components {
+    padding: 20px 0;
+    border-bottom: 1px solid #003F7A;
+}
+
+#sidebar ul p {
+    color: #fff;
+    padding: 10px;
+    margin-bottom: 0;
+}
+
+#sidebar ul li a {
+    padding: 10px;
+    font-size: 1.1em;
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+#sidebar ul li a:hover {
+    color: #004B90;
+    background: #fff;
+}
+
+#sidebar ul li.active > a, a[aria-expanded="true"] {
+    color: #004B90;
+    background: #fff;
+}
+
+a[data-toggle="collapse"] {
+    position: relative;
+}
+
+.dropdown-toggle::after {
+    display: block;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+ul ul a {
+    font-size: 0.9em !important;
+    padding-left: 30px !important;
+    background: #003F7A;
+}
+
+/* Page Content */
+#content {
+    width: 100%;
+    padding: 20px;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+/* Navbar Toggle Button */
+#sidebarCollapse {
+    background-color: #004B90;
+    border: none;
+    color: white;
+}
+
+#sidebarCollapse:hover {
+    background-color: #003F7A;
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.075); /* Subtle shadow */
+}
+
+.card-title {
+    color: #004B90;
+    font-weight: bold;
     margin-bottom: 15px;
 }
 
-.va-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #004B9B;
-    margin-bottom: 5px;
+/* Table Styling */
+.table th, .table td {
+    vertical-align: middle;
+    font-size: 0.85em; /* Smaller font for dense table */
 }
 
-.va-customer-info {
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 10px;
+.table thead th {
+    background-color: #004B90;
+    color: white;
+    border-color: #003F7A;
+    white-space: nowrap; /* Prevent wrapping in headers */
 }
 
-.va-bank {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 75, 144, 0.05); /* Light blue on hover */
+}
+
+/* Pagination */
+.pagination .page-item.active .page-link {
+    background-color: #004B90;
+    border-color: #004B90;
+}
+
+.pagination .page-link {
+    color: #004B90;
+}
+
+.pagination .page-link:hover {
+    color: #003F7A;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 400px; /* Fixed height for charts */
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Modals */
+.modal-header {
+    background-color: #004B90;
+    color: white;
+}
+
+.modal-header .close {
+    color: white;
+    opacity: 1;
+}
+
+/* Virtual Account Modal Styling */
+.va-print-content {
+    text-align: center;
+    padding: 20px;
+}
+
+.va-header-logo {
+    margin-bottom: 20px;
+}
+
+.va-logo {
+    max-width: 150px; /* Adjust as needed */
+    height: auto;
+}
+
+.va-print-content p {
+    font-size: 1.1em;
+    margin-bottom: 8px;
     color: #333;
 }
 
-.va-bank code {
-    display: block;
-    background-color: #e9ecef;
-    padding: 8px 12px;
-    border-radius: 5px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #004B9B;
-    margin-top: 5px;
-    user-select: all; /* Allow easy selection */
+.va-print-content strong {
+    color: #004B90;
 }
 
-.va-other-methods {
-    font-size: 0.9rem;
-    color: #777;
-    margin-top: 15px;
+/* Alert messages */
+.alert-info {
+    color: #004B90;
+    background-color: #e0f2f7; /* Light blue background */
+    border-color: #b3e0ed;
 }
 
-/* Dashboard Sections */
-.dashboard-section {
-    margin-top: 30px;
-    margin-bottom: 30px;
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
 }
 
-/* Chart container styling */
-.chart-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    height: 400px; /* Fixed height for consistent chart size */
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Center content vertically */
-    padding: 15px; /* Add padding inside card */
-}
-
-.chart-card canvas {
-    max-height: 350px; /* Max height for the canvas itself */
-    width: 100% !important; /* Important to override Chart.js default width */
-    height: auto !important; /* Important to override Chart.js default height */
-}
-
-.chart-card-lg { /* For larger charts like monthly sales/revenue */
-    height: 450px; /* Slightly taller for more complex charts */
-}
-
-.chart-card-lg canvas {
-    max-height: 400px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 991.98px) { /* Medium to small devices */
-    .app-title {
-        font-size: 1.6rem;
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -250px;
     }
-    .toggle-dashboard-btn {
-        margin-left: 5px;
-        padding: 6px 12px;
-        font-size: 0.85rem;
+    #sidebar.active {
+        margin-left: 0;
     }
-    .chart-card {
-        height: 350px; /* Smaller height on tablets */
+    #content {
+        width: 100%;
     }
-    .chart-card-lg {
-        height: 400px; /* Smaller height on tablets */
+    #sidebarCollapse span {
+        display: none; /* Hide 'Menu' text on small screens */
     }
-    #customerTable tbody td {
-        max-width: 150px; /* Reduce max-width on smaller screens */
+    .navbar-title {
+        font-size: 1.2em;
     }
-}
-
-@media (max-width: 767.98px) { /* Small devices (phones) */
-    .app-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 10px;
-    }
-    .app-logo {
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-    .app-title {
-        font-size: 1.3rem;
-        margin-top: 5px;
-        margin-bottom: 10px;
-    }
-    .toggle-dashboard-btn {
-        margin: 5px 0; /* Adjust margin for stacked buttons on smaller screens */
-        width: 100%; /* Make buttons take full width */
-    }
-    .chart-card {
-        height: 300px; /* Even smaller height on phones */
-    }
-    .chart-card-lg {
-        height: 350px; /* Even smaller height on phones */
-    }
-    #customerTable tbody td {
-        max-width: 100px; /* Further reduce max-width on phones */
-        font-size: 0.8rem;
-        padding: 8px 10px;
-    }
-    #customerTable thead th {
-        font-size: 0.85rem;
-        padding: 10px 12px;
+    .row.mb-4.align-items-end .col-md-2.d-flex {
+        margin-top: 15px; /* Add space for apply button on small screens */
     }
 }
