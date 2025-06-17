@@ -44,6 +44,9 @@
                         <li>
                             <a href="#" onclick="showSection('modemStatusAnalysis')">Analisis Status Modem</a>
                         </li>
+                        <li>
+                            <a href="#" onclick="showSection('salesCodeStatusAnalysis')">Analisis Status per Sales Code</a>
+                        </li>
                     </ul>
                 </li>
             </ul>
@@ -304,6 +307,23 @@
                 </div>
             </section>
 
+            <section id="salesCodeStatusAnalysis" class="content-section d-none">
+                <div class="card p-3 shadow-sm">
+                    <h3 class="card-title text-center">Analisis Status Customer (Suspend & Terminated) per Sales Code</h3>
+                    <div class="form-group">
+                        <label for="salesCodeStatusFilter">Pilih Sales Code:</label>
+                        <select class="form-control" id="salesCodeStatusFilter">
+                            <option value="">Semua Sales Code</option>
+                            </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesCodeStatusChart"></canvas>
+                    </div>
+                    <div id="salesCodeStatusChartError" class="alert alert-danger mt-3 d-none">Gagal memuat data analisis status per Sales Code.</div>
+                </div>
+            </section>
+
+
         </div>
     </div>
 
@@ -313,7 +333,8 @@
 
     <script>
         // --- KONFIGURASI URL APPS SCRIPT ---
-        const customerWebAppUrl = 'https://script.google.com/macros/s/AKfycbxx2V5MzkTUrtFY4cbLfyjE51cdZoahXEodZzg7H30qwxFgIABfNiI2DZ8A1fSNLpkhZQ/exec'; // GANTI DENGAN URL APPS SCRIPT ANDA
+        // GANTI DENGAN URL APPS SCRIPT ANDA
+        const customerWebAppUrl = 'https://script.google.com/macros/s/AKfycbxx2V5MzkTUrtFY4cbLfyjE51cdZoahXEodZzg7H30qwxFgIABfNiI2DZ8A1fSNLpkhZQ/exec'; 
 
         // --- GLOBAL VARIABLES ---
         let allCustomers = [];
@@ -333,6 +354,7 @@
         let kecamatanChartInstance = null;
         let bundleNameChartInstance = null;
         let modemStatusChartInstance = null;
+        let salesCodeStatusChartInstance = null;
 
         // --- UTILITY FUNCTIONS ---
         const formatNumber = (num) => new Intl.NumberFormat('id-ID').format(num);
@@ -350,7 +372,12 @@
                 clickedLink.parentElement.classList.add('active');
                 // If it's in a submenu, also activate the parent
                 if (clickedLink.closest('.collapse')) {
-                    clickedLink.closest('li').classList.add('active');
+                    const parentLi = clickedLink.closest('.collapse').previousElementSibling.parentElement;
+                    if (parentLi) {
+                        parentLi.classList.add('active');
+                        // Ensure the dropdown is open
+                        $(clickedLink.closest('.collapse')).collapse('show');
+                    }
                 }
             }
 
@@ -360,7 +387,8 @@
             if (sectionId === 'kecamatanAnalysis') renderKecamatanChart();
             if (sectionId === 'bundleNameAnalysis') renderBundleNameChart();
             if (sectionId === 'modemStatusAnalysis') renderModemStatusChart();
-
+            if (sectionId === 'salesCodeStatusAnalysis') renderSalesCodeStatusChart();
+            
             // For mobile, close sidebar when a section is selected
             if (window.innerWidth <= 768) {
                 $('#sidebar').removeClass('active');
@@ -381,7 +409,7 @@
                 document.getElementById('totalCustomerDisplay').textContent = `Menampilkan ${filteredCustomers.length} dari ${allCustomers.length} Customer.`;
                 populateSalesCodeFilter();
                 renderCustomerTable(currentPage);
-                renderAllCharts(); // Render all charts after initial data fetch
+                renderAllCharts();
             } catch (error) {
                 console.error('Error fetching customer data:', error);
                 document.getElementById('totalCustomerDisplay').textContent = `Gagal memuat jumlah customer. Error: ${error.message}.`;
@@ -395,6 +423,8 @@
                 document.getElementById('bundleNameError').textContent = `Gagal memuat data analisis Bundle Name. Error: ${error.message}`;
                 document.getElementById('modemStatusError').classList.remove('d-none');
                 document.getElementById('modemStatusError').textContent = `Gagal memuat data analisis Status Modem. Error: ${error.message}`;
+                document.getElementById('salesCodeStatusChartError').classList.remove('d-none');
+                document.getElementById('salesCodeStatusChartError').textContent = `Gagal memuat data analisis status per Sales Code. Error: ${error.message}`;
 
 
                 // Also display error on table
@@ -444,16 +474,14 @@
             paginationUl.innerHTML = '';
             const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-            const maxPagesToShow = 5; // Number of pages to show around the current page
+            const maxPagesToShow = 5;
             let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
             let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
 
-            // Adjust startPage if endPage is at totalPages and totalPages is less than maxPagesToShow from current
             if (endPage === totalPages && endPage - startPage + 1 < maxPagesToShow) {
                 startPage = Math.max(1, endPage - maxPagesToShow + 1);
             }
 
-            // "Previous" button
             const prevLi = document.createElement('li');
             prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
             const prevA = document.createElement('a');
@@ -470,7 +498,6 @@
             prevLi.appendChild(prevA);
             paginationUl.appendChild(prevLi);
 
-            // Page numbers
             for (let i = startPage; i <= endPage; i++) {
                 const li = document.createElement('li');
                 li.className = `page-item ${i === currentPage ? 'active' : ''}`;
@@ -487,7 +514,6 @@
                 paginationUl.appendChild(li);
             }
 
-            // "Next" button
             const nextLi = document.createElement('li');
             nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
             const nextA = document.createElement('a');
@@ -557,8 +583,8 @@
         function showVaDetail(customer) {
             const vaDetailBody = document.getElementById('vaDetailBody');
             let vaHtmlContent = `
-                <div class="va-header-logo">
-                    <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="img-fluid va-logo">
+                <div class="text-center mb-3">
+                    <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="img-fluid" style="max-height: 50px;">
                 </div>
             `;
 
@@ -567,8 +593,8 @@
                 <p><strong>Masa aktif sampai:</strong> ${customer.EXPIREDDATE || '-'}</p>
             `;
 
+            // Logic for Metronet vs. Home/other bundles
             if (customer.BUNDLE_LOB && customer.BUNDLE_LOB.toUpperCase() === 'METRONET') {
-                // Logika untuk Metronet
                 vaHtmlContent += `
                     <p><strong>Pembayaran melalui Virtual Account</strong></p>
                     <p><strong>Payment via Virtual Account</strong></p>
@@ -579,7 +605,6 @@
                     <p><strong>Billing ID:</strong> ${customer.CONTRACTACCOUNT || '-'}</p>
                 `;
             } else {
-                // Logika default untuk Home atau BUNDLE_LOB lainnya
                 vaHtmlContent += `
                     <p><strong>Bank Permata Virtual Account:</strong> ${customer.CONTRACTACCOUNT ? `899300-${customer.CONTRACTACCOUNT}` : '-'}</p>
                     <p><strong>Bank BCA Virtual Account:</strong> ${customer.CONTRACTACCOUNT ? `711170-${customer.CONTRACTACCOUNT}` : '-'}</p>
@@ -596,10 +621,10 @@
         }
 
         function downloadVaAsJpg(customer) {
-            const vaModalContent = document.getElementById('vaModal').querySelector('.va-print-content'); // Target the content div
+            const vaModalContent = document.getElementById('vaModal').querySelector('.va-print-content');
             html2canvas(vaModalContent, {
-                scale: 2, // Increase scale for better quality
-                useCORS: true, // Allow cross-origin images if your logo is hosted elsewhere
+                scale: 2,
+                useCORS: true,
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `VA_Customer_${(customer.BP_FULLNAME || 'Unknown').replace(/\s/g, '_')}.jpg`;
@@ -634,18 +659,15 @@
             currentPage = 1;
             document.getElementById('totalCustomerDisplay').textContent = `Menampilkan ${filteredCustomers.length} dari ${allCustomers.length} Customer.`;
             renderCustomerTable(currentPage);
-            // Re-render charts only if they are visible
-            if (!document.getElementById('newCustomerAnalysis').classList.contains('d-none')) renderCustomerChart();
-            if (!document.getElementById('customerStatusAnalysis').classList.contains('d-none')) renderCustomerStatusTable();
-            if (!document.getElementById('kecamatanAnalysis').classList.contains('d-none')) renderKecamatanChart();
-            if (!document.getElementById('bundleNameAnalysis').classList.contains('d-none')) renderBundleNameChart();
-            if (!document.getElementById('modemStatusAnalysis').classList.contains('d-none')) renderModemStatusChart();
+            renderAllCharts();
         }
 
         function populateSalesCodeFilter() {
             const salesCodeSelect = document.getElementById('filterSalesCode');
             salesCodeSelect.innerHTML = '<option value="">Semua Sales Code</option>';
-            // Ensure `allCustomers` is populated before trying to map and filter
+            const salesCodeStatusSelect = document.getElementById('salesCodeStatusFilter');
+            salesCodeStatusSelect.innerHTML = '<option value="">Semua Sales Code</option>';
+
             if (allCustomers && allCustomers.length > 0) {
                 const salesCodes = [...new Set(allCustomers.map(c => c.SALESCODE).filter(Boolean))].sort();
                 salesCodes.forEach(code => {
@@ -653,12 +675,12 @@
                     option.value = code;
                     option.textContent = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
                     salesCodeSelect.appendChild(option);
+                    salesCodeStatusSelect.appendChild(option.cloneNode(true));
                 });
             } else {
                 console.warn("allCustomers is empty, cannot populate sales code filter.");
             }
 
-            // Populate salesCodeKecamatanFilter as well
             const salesCodeKecamatanSelect = document.getElementById('salesCodeKecamatanFilter');
             salesCodeKecamatanSelect.innerHTML = '<option value="">Pilih Sales Code</option>';
             if (allCustomers && allCustomers.length > 0) {
@@ -672,37 +694,58 @@
              }
         }
 
+
         // --- CHARTING FUNCTIONS ---
         function renderAllCharts() {
-            renderCustomerChart();
-            renderCustomerStatusTable();
-            renderKecamatanChart();
-            renderBundleNameChart();
-            renderModemStatusChart();
+            if (!document.getElementById('newCustomerAnalysis').classList.contains('d-none')) renderCustomerChart();
+            if (!document.getElementById('customerStatusAnalysis').classList.contains('d-none')) renderCustomerStatusTable();
+            if (!document.getElementById('kecamatanAnalysis').classList.contains('d-none')) renderKecamatanChart();
+            if (!document.getElementById('bundleNameAnalysis').classList.contains('d-none')) renderBundleNameChart();
+            if (!document.getElementById('modemStatusAnalysis').classList.contains('d-none')) renderModemStatusChart();
+            if (!document.getElementById('salesCodeStatusAnalysis').classList.contains('d-none')) renderSalesCodeStatusChart();
         }
 
         function parseDate(dateString) {
-            // Assumes DD/MM/YYYY format
-            if (!dateString) return null;
-            const parts = dateString.split('/');
-            if (parts.length === 3) {
-                const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
-                let year = parseInt(parts[2], 10);
+            if (!dateString) {
+                return null;
+            }
 
-                // Handle 2-digit years (e.g., 24 for 2024, 70 for 1970)
-                if (year < 100) {
-                    year = (year < 70) ? (2000 + year) : (1900 + year);
-                }
+            const partsDash = dateString.split('-');
+            if (partsDash.length === 3) {
+                const year = parseInt(partsDash[0], 10);
+                const month = parseInt(partsDash[1], 10) - 1;
+                const day = parseInt(partsDash[2], 10);
                 const date = new Date(year, month, day);
-                // Check if the date is valid
                 if (!isNaN(date.getTime())) {
                     return date;
                 }
             }
+
+            const partsSlash = dateString.split('/');
+            if (partsSlash.length === 3) {
+                const day = parseInt(partsSlash[0], 10);
+                const month = parseInt(partsSlash[1], 10) - 1;
+                let year = parseInt(partsSlash[2], 10);
+
+                if (year < 100) {
+                    year = (year < 70) ? (2000 + year) : (1900 + year);
+                }
+                const date = new Date(year, month, day);
+                if (!isNaN(date.getTime())) {
+                    return date;
+                }
+            }
+
+            try {
+                const date = new Date(dateString);
+                if (!isNaN(date.getTime())) {
+                    return date;
+                }
+            } catch (e) {
+                console.error("Failed to parse date string:", dateString, e);
+            }
             return null;
         }
-
 
         function renderCustomerChart() {
             const ctx = document.getElementById('customerChart');
@@ -713,7 +756,7 @@
                 customerChartInstance.destroy();
             }
 
-            const monthlyCustomerData = {}; // Stores { 'YYYY-MM': { 'SALESCODE': count, 'SALESCODE2': count } }
+            const monthlyCustomerData = {};
             const allSalesCodes = new Set();
             const allMonths = new Set();
 
@@ -735,7 +778,6 @@
 
             const sortedMonths = Array.from(allMonths).sort();
             const sortedSalesCodes = Array.from(allSalesCodes).sort((a, b) => {
-                // Sort 'Tidak Diketahui' last
                 if (a === 'Tidak Diketahui') return 1;
                 if (b === 'Tidak Diketahui') return -1;
                 return a.localeCompare(b);
@@ -753,6 +795,16 @@
                     pointHoverRadius: 8
                 };
             });
+
+            if (datasets.length === 0 || sortedMonths.length === 0 || datasets.every(ds => ds.data.every(d => d === 0))) {
+                 context.clearRect(0, 0, ctx.width, ctx.height);
+                 document.getElementById('customerChartError').classList.remove('d-none');
+                 document.getElementById('customerChartError').textContent = 'Tidak ada data customer baru yang sesuai dengan filter.';
+                 return;
+            } else {
+                 document.getElementById('customerChartError').classList.add('d-none');
+            }
+
 
             customerChartInstance = new Chart(context, {
                 type: 'line',
@@ -801,7 +853,6 @@
                             }
                         }
                     },
-                    // Add onClick event to the chart
                     onClick: (event, elements, chart) => {
                         if (elements.length > 0) {
                             const firstElement = elements[0];
@@ -811,25 +862,45 @@
                             const clickedSalesCode = sortedSalesCodes[datasetIndex];
                             const clickedMonth = sortedMonths[dataIndex];
 
-                            showCustomersForChartPoint(clickedSalesCode, clickedMonth);
+                            showCustomersForChartPoint('SALESCODE', clickedSalesCode, clickedMonth, 'CONTRACTSTARTDATE', ['ACTIVE', 'SUSPENDED', 'TERMINATED']); // Include all statuses for new customers
                         }
                     }
                 }
             });
-            document.getElementById('customerChartError').classList.add('d-none');
         }
 
-        function showCustomersForChartPoint(salesCode, month) {
-            const [year, monthNum] = month.split('-').map(Number);
+        // Updated showCustomersForChartPoint to be more generic
+        // keyColumn: 'SALESCODE' or 'RO_FROM_SALESCODE' or 'SM_FROM_SALESCODE'
+        // keyFilterValue: The actual value (e.g., '200602', 'RM02 PALEMBANG - SUMATRA 2')
+        // dateFilterValue: 'YYYY-MM'
+        // dateColumn: 'CONTRACTSTARTDATE', 'EXPIREDDATE', or 'TERMDATE'
+        // statusFilters: Array of statuses (e.g., ['ACTIVE'], ['SUSPENDED'], ['TERMINATED'])
+        function showCustomersForChartPoint(keyColumn, keyFilterValue, dateFilterValue, dateColumn, statusFilters = []) {
+            const [year, monthNum] = dateFilterValue.split('-').map(Number);
 
             const relevantCustomers = filteredCustomers.filter(customer => {
-                const contractDate = parseDate(customer.CONTRACTSTARTDATE);
-                if (contractDate) {
-                    const customerYear = contractDate.getFullYear();
-                    const customerMonth = contractDate.getMonth() + 1;
-                    const customerSalesCode = customer.SALESCODE || 'Tidak Diketahui';
+                const dateToFilter = parseDate(customer[dateColumn]);
+                if (dateToFilter) {
+                    const customerYear = dateToFilter.getFullYear();
+                    const customerMonth = dateToFilter.getMonth() + 1;
 
-                    return customerYear === year && customerMonth === monthNum && customerSalesCode === salesCode;
+                    // Check if the date matches the clicked month/year
+                    const dateMatch = customerYear === year && customerMonth === monthNum;
+
+                    // Check if the key (Sales Code or ARCO) matches
+                    let keyMatch = false;
+                    // If keyFilterValue is 'All', it means we are not filtering by a specific key value
+                    if (keyFilterValue === 'All') {
+                        keyMatch = true;
+                    } else if (customer[keyColumn] === keyFilterValue) {
+                        keyMatch = true;
+                    }
+
+                    // Check if the status matches
+                    const customerStatus = (customer.STATUS || '').toUpperCase();
+                    const statusMatch = statusFilters.length === 0 || statusFilters.includes(customerStatus);
+                    
+                    return dateMatch && keyMatch && statusMatch;
                 }
                 return false;
             });
@@ -844,16 +915,32 @@
                     const row = modalBodyTable.insertRow();
                     row.insertCell().textContent = customer.BP_FULLNAME || '-';
                     row.insertCell().textContent = customer.CONTRACTNUMBER || '-';
-                    row.insertCell().textContent = salesCodeNames[customer.SALESCODE] ? `${salesCodeNames[customer.SALESCODE]} (${customer.SALESCODE})` : customer.SALESCODE || '-';
+                    row.insertCell().textContent = customer.SALESCODE || '-';
                     row.insertCell().textContent = customer.CONTRACTSTARTDATE || '-';
                     row.insertCell().textContent = customer.STATUS || '-';
                     row.insertCell().textContent = customer.BUNDLE_NAME || '-';
                     row.insertCell().textContent = customer.SUBDISTRICT_INST || '-';
-                    // Add more cells for more detail as needed
                 });
             }
 
-            document.getElementById('chartDetailModalLabel').textContent = `Customer Baru untuk ${salesCodeNames[salesCode] ? `${salesCodeNames[salesCode]} (${salesCode})` : salesCode} pada Bulan ${month}`;
+            let titlePrefix = '';
+            let keyLabel = keyFilterValue;
+            if (keyColumn === 'SALESCODE' && salesCodeNames[keyFilterValue]) {
+                keyLabel = `${salesCodeNames[keyFilterValue]} (${keyFilterValue})`;
+            } else if (keyFilterValue === 'All') {
+                keyLabel = 'Semua Sales Code';
+            }
+
+
+            if (dateColumn === 'CONTRACTSTARTDATE') {
+                titlePrefix = `Customer Baru untuk ${keyLabel}`;
+            } else if (dateColumn === 'EXPIREDDATE') {
+                titlePrefix = `Customer Suspended untuk ${keyLabel}`;
+            } else if (dateColumn === 'TERMDATE') {
+                titlePrefix = `Customer Terminated untuk ${keyLabel}`;
+            }
+
+            document.getElementById('chartDetailModalLabel').textContent = `${titlePrefix} pada Bulan ${dateFilterValue}`;
             $('#chartDetailModal').modal('show');
         }
 
@@ -866,7 +953,7 @@
             const statusBySalesCode = {};
             filteredCustomers.forEach(customer => {
                 const salesCode = customer.SALESCODE || 'Tidak Diketahui';
-                const status = customer.STATUS || 'Tidak Diketahui';
+                const status = customer.STATUS ? customer.STATUS.toUpperCase() : 'Tidak Diketahui';
 
                 if (!statusBySalesCode[salesCode]) {
                     statusBySalesCode[salesCode] = { ACTIVE: 0, SUSPENDED: 0, TERMINATED: 0, 'Tidak Diketahui': 0, Total: 0 };
@@ -879,17 +966,21 @@
 
             if (sortedSalesCodes.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center">Tidak ada data status customer yang ditemukan.</td></tr>`;
-            } else {
-                sortedSalesCodes.forEach(salesCode => {
-                    const row = tableBody.insertRow();
-                    row.insertCell().textContent = salesCodeNames[salesCode] ? `${salesCodeNames[salesCode]} (${salesCode})` : salesCode;
-                    row.insertCell().textContent = statusBySalesCode[salesCode].ACTIVE;
-                    row.insertCell().textContent = statusBySalesCode[salesCode].SUSPENDED;
-                    row.insertCell().textContent = statusBySalesCode[salesCode].TERMINATED;
-                    row.insertCell().textContent = statusBySalesCode[salesCode].Total;
-                });
+                document.getElementById('customerStatusError').classList.remove('d-none');
+                document.getElementById('customerStatusError').textContent = 'Tidak ada data status customer yang sesuai dengan filter.';
+                return;
             }
             document.getElementById('customerStatusError').classList.add('d-none');
+
+
+            sortedSalesCodes.forEach(salesCode => {
+                const row = tableBody.insertRow();
+                row.insertCell().textContent = salesCodeNames[salesCode] ? `${salesCodeNames[salesCode]} (${salesCode})` : salesCode;
+                row.insertCell().textContent = statusBySalesCode[salesCode].ACTIVE;
+                row.insertCell().textContent = statusBySalesCode[salesCode].SUSPENDED;
+                row.insertCell().textContent = statusBySalesCode[salesCode].TERMINATED;
+                row.insertCell().textContent = statusBySalesCode[salesCode].Total;
+            });
         }
 
         function renderKecamatanChart() {
@@ -904,7 +995,6 @@
             const salesCodeKecamatanFilter = document.getElementById('salesCodeKecamatanFilter');
             let selectedSalesCode = salesCodeKecamatanFilter.value;
 
-            // If no sales code is selected initially, select the first available one
             if (!selectedSalesCode && salesCodeKecamatanFilter.options.length > 1) {
                 selectedSalesCode = salesCodeKecamatanFilter.options[1].value;
                 salesCodeKecamatanFilter.value = selectedSalesCode;
@@ -921,7 +1011,6 @@
             const labels = sortedKecamatans;
             const data = sortedKecamatans.map(kec => kecamatanCounts[kec]);
 
-            // If no data, display a message
             if (data.length === 0) {
                 context.clearRect(0, 0, ctx.width, ctx.height);
                 document.getElementById('kecamatanChartError').classList.remove('d-none');
@@ -945,7 +1034,7 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // Horizontal bar chart
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
@@ -1017,7 +1106,7 @@
             const sortedBundleNames = Object.keys(bundleNameCounts).sort((a, b) => bundleNameCounts[b] - bundleNameCounts[a]);
             const labels = sortedBundleNames;
             const data = sortedBundleNames.map(name => bundleNameCounts[name]);
-            const backgroundColors = labels.map(() => getRandomColor(0.7)); // Adjusted opacity
+            const backgroundColors = labels.map(() => getRandomColor(0.7));
             const borderColors = backgroundColors.map(color => color.replace('0.7', '1'));
 
             if (data.length === 0) {
@@ -1157,8 +1246,8 @@
                                 dataArr.map(data => {
                                     sum += data;
                                 });
-                                let percentage = (value * 100 / sum).toFixed(1) + "%"; // 1 decimal place
-                                return `${ctx.chart.data.labels[ctx.dataIndex]}: ${percentage}`; // Label: Percentage
+                                let percentage = (value * 100 / sum).toFixed(1) + "%";
+                                return `${ctx.chart.data.labels[ctx.dataIndex]}: ${percentage}`;
                             }
                         },
                         tooltip: {
@@ -1181,6 +1270,166 @@
             });
         }
 
+        function renderSalesCodeStatusChart() {
+            const ctx = document.getElementById('salesCodeStatusChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+
+            if (salesCodeStatusChartInstance) {
+                salesCodeStatusChartInstance.destroy();
+            }
+
+            const selectedSalesCode = document.getElementById('salesCodeStatusFilter').value;
+
+            let customersToAnalyze = filteredCustomers;
+            if (selectedSalesCode) {
+                customersToAnalyze = filteredCustomers.filter(customer =>
+                    customer.SALESCODE === selectedSalesCode
+                );
+            }
+
+            const monthlySalesCodeData = {};
+            const allMonths = new Set();
+
+            customersToAnalyze.forEach(customer => {
+                if (customer.STATUS && customer.STATUS.toUpperCase() === 'SUSPENDED') {
+                    const expiredDate = parseDate(customer.EXPIREDDATE);
+                    if (expiredDate) {
+                        const yearMonth = `${expiredDate.getFullYear()}-${(expiredDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                        allMonths.add(yearMonth);
+                        if (!monthlySalesCodeData[yearMonth]) {
+                            monthlySalesCodeData[yearMonth] = { Suspend: 0, Terminated: 0 };
+                        }
+                        monthlySalesCodeData[yearMonth].Suspend++;
+                    }
+                } else if (customer.STATUS && customer.STATUS.toUpperCase() === 'TERMINATED') {
+                    const termDate = parseDate(customer.TERMDATE);
+                    if (termDate) {
+                        const yearMonth = `${termDate.getFullYear()}-${(termDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                        allMonths.add(yearMonth);
+                        if (!monthlySalesCodeData[yearMonth]) {
+                            monthlySalesCodeData[yearMonth] = { Suspend: 0, Terminated: 0 };
+                        }
+                        monthlySalesCodeData[yearMonth].Terminated++;
+                    }
+                }
+            });
+
+            const sortedMonths = Array.from(allMonths).sort();
+
+            const suspendData = sortedMonths.map(month => monthlySalesCodeData[month] ? monthlySalesCodeData[month].Suspend : 0);
+            const terminatedData = sortedMonths.map(month => monthlySalesCodeData[month] ? monthlySalesCodeData[month].Terminated : 0);
+
+            const datasets = [
+                {
+                    label: 'Suspend',
+                    data: suspendData,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Terminated',
+                    data: terminatedData,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }
+            ];
+
+            if (datasets[0].data.reduce((a, b) => a + b, 0) === 0 && datasets[1].data.reduce((a, b) => a + b, 0) === 0) {
+                 context.clearRect(0, 0, ctx.width, ctx.height);
+                 document.getElementById('salesCodeStatusChartError').classList.remove('d-none');
+                 document.getElementById('salesCodeStatusChartError').textContent = `Tidak ada data suspend atau terminated untuk Sales Code ${salesCodeNames[selectedSalesCode] ? `${salesCodeNames[selectedSalesCode]} (${selectedSalesCode})` : (selectedSalesCode || 'yang dipilih')}.`;
+                 return;
+            } else {
+                 document.getElementById('salesCodeStatusChartError').classList.add('d-none');
+            }
+
+            salesCodeStatusChartInstance = new Chart(context, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: `Status Customer (Suspend & Terminated) per Bulan untuk Sales Code ${salesCodeNames[selectedSalesCode] ? `${salesCodeNames[selectedSalesCode]} (${selectedSalesCode})` : (selectedSalesCode || 'Semua Sales Code')}`
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw;
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Bulan'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Jumlah Customer'
+                            },
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0) {
+                            const firstElement = elements[0];
+                            const datasetIndex = firstElement.datasetIndex; // 0 for Suspend, 1 for Terminated
+                            const dataIndex = firstElement.index;
+
+                            const clickedMonth = sortedMonths[dataIndex];
+                            const clickedStatusType = datasets[datasetIndex].label;
+
+                            let dateColumn;
+                            let statusToFilter = [];
+
+                            if (clickedStatusType === 'Suspend') {
+                                dateColumn = 'EXPIREDDATE';
+                                statusToFilter = ['SUSPENDED'];
+                            } else if (clickedStatusType === 'Terminated') {
+                                dateColumn = 'TERMDATE';
+                                statusToFilter = ['TERMINATED'];
+                            }
+                            
+                            // Perhatikan: keyFilterValue akan menjadi selectedSalesCode saat ini dari dropdown.
+                            // Jika dropdown 'Semua Sales Code' dipilih, maka selectedSalesCode akan kosong,
+                            // dan showCustomersForChartPoint akan menangani ini dengan 'All'.
+                            showCustomersForChartPoint('SALESCODE', selectedSalesCode || 'All', clickedMonth, dateColumn, statusToFilter);
+                        }
+                    }
+                }
+            });
+        }
+
 
         function getRandomColor(alpha = 1) {
             const r = Math.floor(Math.random() * 255);
@@ -1195,6 +1444,7 @@
         document.getElementById('filterStatus').addEventListener('change', applyFilters);
         document.getElementById('filterSalesCode').addEventListener('change', applyFilters);
         document.getElementById('salesCodeKecamatanFilter').addEventListener('change', renderKecamatanChart);
+        document.getElementById('salesCodeStatusFilter').addEventListener('change', renderSalesCodeStatusChart);
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1203,7 +1453,7 @@
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
             });
-            showSection('customerOverview'); // Show customer overview by default
+            showSection('customerOverview');
         });
     </script>
 </body>
