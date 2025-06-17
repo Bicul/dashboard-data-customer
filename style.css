@@ -1,42 +1,147 @@
+/* General Body and Header */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
-    background-color: #e9ecef; /* Latar belakang abu-abu muda */
-    color: #343a40; /* Warna teks gelap */
+    background-color: #f0f2f5; /* Latar belakang abu-abu muda modern */
+    color: #333;
+    line-height: 1.6;
 }
 
-.container {
-    padding-top: 20px;
-    padding-bottom: 20px;
+.app-header {
+    background-color: #004b90; /* Warna biru gelap Biznet */
+    color: white;
+    padding: 15px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-    color: #007bff; /* Warna biru untuk judul */
-    font-weight: 600;
+.app-logo {
+    height: 40px; /* Ukuran logo */
+    margin-right: 15px;
+}
+
+.app-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+    /* Responsif: Kecilkan ukuran font judul di layar sangat kecil */
+    font-size: 1.5rem; 
+}
+
+/* Untuk header di layar kecil, agar judul dan logo tidak terlalu berdesakan */
+@media (max-width: 575.98px) {
+    .app-header .container {
+        flex-direction: column; /* Tumpuk logo dan judul */
+        text-align: center;
+    }
+    .app-logo {
+        margin-right: 0;
+        margin-bottom: 10px; /* Jarak antara logo dan judul */
+    }
+}
+
+
+/* Main Content Area */
+.main-content {
+    margin-top: 30px;
     margin-bottom: 30px;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
-    display: inline-block; /* Agar border-bottom hanya selebar teks */
 }
 
-.table-responsive {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Bayangan lebih halus */
-    border-radius: 8px; /* Sudut membulat */
-    overflow-x: auto; /* Pastikan tabel bisa di-scroll horizontal */
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* Form Elements (Search and Filters) */
+.form-label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+    border-radius: .25rem 0 0 .25rem;
+    color: #007bff; /* Warna ikon search */
+}
+
+.form-control {
+    border-left: none;
+    border-radius: 0 .25rem .25rem 0;
+    box-shadow: none !important; /* Hapus bayangan default focus Bootstrap */
+}
+
+.form-control:focus {
+    border-color: #007bff;
+}
+
+.btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Table Styling */
+.app-table-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    overflow-x: auto; /* Untuk scroll horizontal pada layar kecil */
 }
 
 .table {
-    margin-bottom: 0; /* Hapus margin bawah default tabel Bootstrap */
+    margin-bottom: 0; /* Hapus margin bawah default Bootstrap */
 }
 
 .table thead th {
     background-color: #007bff; /* Biru cerah untuk header */
     color: white;
-    font-weight: bold;
-    text-align: center; /* Teks header di tengah */
-    vertical-align: middle; /* Posisi teks vertikal di tengah */
+    font-weight: 600;
+    text-align: left; /* Teks header di kiri */
+    vertical-align: middle;
+    padding: 12px 15px;
+    border-bottom: 2px solid #0056b3;
     white-space: nowrap; /* Cegah teks header pecah baris */
 }
+
+.table tbody td {
+    padding: 10px 15px;
+    vertical-align: middle;
+    border-top: 1px solid #e9ecef; /* Garis pemisah antar baris */
+    white-space: nowrap; /* Default: cegah pecah baris */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Tampilkan ... jika teks terlalu panjang */
+    max-width: 150px; /* Batasi lebar default kolom */
+}
+
+/* Penyesuaian Responsif untuk Kolom Tabel */
+/* Di layar sangat kecil (ponsel), biarkan teks pecah baris untuk kolom tertentu */
+@media (max-width: 767.98px) {
+    .table tbody td {
+        white-space: normal; /* Izinkan teks pecah baris di ponsel */
+        max-width: none; /* Hapus batasan lebar maksimum */
+    }
+}
+
+
+/* Spesifik untuk kolom panjang seperti nama/alamat */
+.table tbody td:nth-child(2), /* BP_FULLNAME */
+.table tbody td:nth-child(3), /* BP_EMAIL */
+.table tbody td:nth-child(28), /* INSTALLATION_ADDRESS1 */
+.table tbody td:nth-child(29), /* INSTALLATION_ADDRESS2 */
+.table tbody td:nth-child(30), /* INSTALLATION_ADDRESS3 */
+.table tbody td:nth-child(31)  /* INSTALLATION_ADDRESS4 */ {
+    max-width: 200px; 
+    white-space: normal; /* Biarkan teks pecah baris jika perlu untuk ini */
+}
+
 
 .table tbody tr:nth-child(even) {
     background-color: #f8f9fa; /* Warna latar belakang baris genap lebih terang */
@@ -47,24 +152,109 @@ h1 {
     cursor: pointer;
 }
 
-.table tbody td {
+/* Modal VA Styling */
+#vaModal .modal-content {
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.3);
+}
+
+#vaModal .modal-header {
+    background-color: #007bff;
+    color: white;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+#vaModal .modal-header .close {
+    color: white;
+    opacity: 0.8;
+}
+
+#vaModal .modal-body {
+    padding: 25px;
+    /* Style untuk konten yang akan di-capture */
+    background-color: #ffffff; /* Pastikan latar belakang putih untuk gambar */
+    font-size: 1rem;
+    color: #333;
+}
+
+/* Styling untuk konten VA di dalam modal (yang akan jadi gambar) */
+.va-card {
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #fefefe; /* Latar belakang VA card */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Gaya baru untuk logo Biznet di dalam VA card */
+.va-biznet-logo {
+    display: block; /* Agar bisa diatur margin auto */
+    margin: 0 auto 20px auto; /* Tengah dan beri jarak bawah */
+    height: 50px; /* Atur tinggi logo agar tidak terlalu besar */
+    max-width: 80%; /* Pastikan tidak melebihi lebar kontainer */
+    object-fit: contain; /* Jaga rasio aspek */
+}
+
+
+.va-title {
+    font-size: 1.25em;
+    font-weight: 600;
+    color: #0056b3;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.va-customer-info {
+    font-size: 1.05em;
+    margin-bottom: 5px;
+}
+
+.va-bank {
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.va-bank code, .va-other-methods code {
+    display: block;
     padding: 10px;
-    vertical-align: middle;
-    white-space: nowrap; /* Cegah teks data pecah baris */
-    overflow: hidden;
-    text-overflow: ellipsis; /* Tampilkan ... jika teks terlalu panjang */
-    max-width: 150px; /* Batasi lebar kolom agar tidak terlalu lebar */
+    background-color: #e9ecef;
+    border: 1px dashed #ced4da; /* Border putus-putus */
+    border-radius: 6px;
+    font-size: 1.1em;
+    color: #495057;
+    word-break: break-all;
+    font-family: 'Courier New', Courier, monospace; /* Font monospace untuk kode VA */
+    margin-top: 5px;
 }
 
-/* Sesuaikan lebar kolom tertentu jika diperlukan */
-.table tbody td:nth-child(2), /* BP_FULLNAME */
-.table tbody td:nth-child(3)  /* BP_EMAIL */ {
-    max-width: 250px; 
-    white-space: normal; /* Biarkan teks pecah baris jika perlu untuk nama/email */
+.va-other-methods {
+    font-size: 0.95em;
+    margin-top: 20px;
 }
 
-/* Styling untuk pesan loading/error */
-.text-center.text-danger {
-    padding: 20px;
-    font-weight: bold;
+/* Spinner Loading */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+    vertical-align: -0.125em;
+}
+
+/* Error Message */
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+    border-radius: 8px;
+}
+
+/* Gaya untuk customer count */
+.alert-info {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    border-radius: 8px;
 }
