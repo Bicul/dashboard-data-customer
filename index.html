@@ -14,9 +14,14 @@
         <div class="container d-flex justify-content-between align-items-center">
             <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="app-logo"> 
             <h1 class="app-title">Data Customer Biznet Branch Kalianda</h1>
-            <button id="toggleDashboardBtn" class="btn btn-outline-light toggle-dashboard-btn" title="Toggle Dashboard Analytics">
-                <i class="fas fa-chart-bar"></i>
-            </button>
+            <div>
+                <button id="toggleCustomerDashboardBtn" class="btn btn-outline-light toggle-dashboard-btn mr-2" title="Toggle Customer Analytics">
+                    <i class="fas fa-users"></i> Customer
+                </button>
+                <button id="toggleRevenueDashboardBtn" class="btn btn-outline-light toggle-dashboard-btn" title="Toggle Revenue Analytics">
+                    <i class="fas fa-dollar-sign"></i> Revenue
+                </button>
+            </div>
         </div>
     </header>
 
@@ -75,6 +80,24 @@
                     <div class="col-12 chart-card-lg"> 
                         <canvas id="monthlySalesChart"></canvas>
                     </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="container mt-5 dashboard-section d-none" id="revenueDashboardSection">
+            <h2 class="section-title">Analisis Data Revenue</h2>
+
+            <div class="card p-4 shadow-sm mb-4">
+                <h3 class="card-title">Revenue per Kuartal</h3>
+                <div class="col-12 chart-card-lg"> 
+                    <canvas id="quarterlyRevenueChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card p-4 shadow-sm mb-4">
+                <h3 class="card-title">Revenue per Bulan</h3>
+                <div class="col-12 chart-card-lg"> 
+                    <canvas id="monthlyRevenueChart"></canvas>
                 </div>
             </div>
 
@@ -198,12 +221,28 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <script>
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbyPq6xvW3e3FoHozo2M0ZW3ScgNVvRs4ZYNVM44L54ZvTPn94KGlngdyAxwIQMbYhU_Lw/exec'; 
+        // PASTIKAN URL INI SESUAI DENGAN URL WEB APP CUSTOMER DATA ANDA
+        const customerWebAppUrl = 'URL_WEB_APP_CUSTOMER_ANDA'; 
+        // PASTE URL WEB APP REVENUE DATA ANDA DI SINI!
+        const revenueWebAppUrl = 'https://script.google.com/macros/s/AKfycbwN0YEMIOeoHfnQopeY0SePSle5zL1LW_XkQd6Z-Yw95XM-GFrkxWZxQCl8AfsFhYn7xQ/exec'; 
+        
+        // Mapping Sales Code ke Nama Sales Person
+        const salesCodeNames = {
+            '200602': 'Riski Aprianto',
+            '200603': 'Habibi',
+            '200604': 'Ananda Ilham Hakiki',
+            // Tambahkan sales code lain jika ada
+        };
+
         let allCustomerData = []; 
+        let allRevenueData = []; 
         let filteredCustomerData = []; 
         let salesCodeCharts = {}; 
         let subdistrictCharts = {};
         let monthlySalesChartInstance = null; 
+        let quarterlyRevenueChartInstance = null; 
+        let monthlyRevenueChartInstance = null;   
+
 
         async function fetchCustomerData() {
             const tableBody = document.getElementById('customerTable').getElementsByTagName('tbody')[0];
@@ -214,35 +253,50 @@
             errorMessageDiv.classList.add('d-none'); 
             customerCountDiv.textContent = 'Memuat jumlah customer...'; 
 
-            // Clear dashboards while loading
+            // Clear customer dashboards while loading
             document.getElementById('salesCodeStatusDashboard').innerHTML = '<p class="text-muted text-center col-12">Memuat data analisis status...</p>';
             document.getElementById('salesCodeSubdistrictDashboard').innerHTML = '<p class="text-muted text-center col-12">Memuat data analisis kecamatan...</p>';
             document.getElementById('monthlyNewCustomersDashboard').innerHTML = '<div class="col-12 chart-card-lg"><p class="text-muted text-center">Memuat data analisis penjualan bulanan...</p></div>';
+            
+            // Clear revenue dashboards while loading and recreate canvas
+            document.getElementById('quarterlyRevenueChart').parentNode.innerHTML = '<canvas id="quarterlyRevenueChart"></canvas><p class="text-muted text-center">Memuat data revenue kuartalan...</p>';
+            document.getElementById('monthlyRevenueChart').parentNode.innerHTML = '<canvas id="monthlyRevenueChart"></canvas><p class="text-muted text-center">Memuat data revenue bulanan...</p>';
 
 
             try {
-                const response = await fetch(webAppUrl);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // Fetch Customer Data
+                const customerResponse = await fetch(customerWebAppUrl);
+                if (!customerResponse.ok) {
+                    throw new Error(`HTTP error! status: ${customerResponse.status} for customer data`);
                 }
-                const data = await response.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
+                const customerData = await customerResponse.json();
+                if (customerData.error) {
+                    throw new Error(customerData.error);
                 }
-
-                allCustomerData = data; 
+                allCustomerData = customerData; 
                 populateFilters(allCustomerData); 
                 applyFiltersAndSearch(); 
-                
-                // Panggil fungsi-fungsi dashboard setelah data termuat
                 renderSalesCodeStatusDashboard(allCustomerData);
                 renderSalesCodeSubdistrictDashboard(allCustomerData);
                 renderMonthlySalesChart(allCustomerData); 
 
+                // Fetch Revenue Data
+                const revenueResponse = await fetch(revenueWebAppUrl);
+                if (!revenueResponse.ok) {
+                    throw new Error(`HTTP error! status: ${revenueResponse.status} for revenue data`);
+                }
+                const revenueData = await revenueResponse.json();
+                if (revenueData.error) {
+                    throw new Error(revenueData.error);
+                }
+                allRevenueData = revenueData;
+                renderQuarterlyRevenueChart(allRevenueData); 
+                renderMonthlyRevenueChart(allRevenueData);   
+
+
                 errorMessageDiv.classList.add('d-none'); 
             } catch (error) {
-                console.error('Error fetching customer data:', error);
+                console.error('Error fetching data:', error);
                 tableBody.innerHTML = '<tr><td colspan="39" class="text-center text-danger">Error memuat data.</td></tr>';
                 errorMessageDiv.textContent = `Gagal memuat data: ${error.message}. Pastikan Google Sheet Anda dapat diakses dan Apps Script berjalan dengan benar.`;
                 errorMessageDiv.classList.remove('d-none'); 
@@ -252,6 +306,9 @@
                 document.getElementById('salesCodeStatusDashboard').innerHTML = '<p class="text-danger text-center col-12">Gagal memuat data analisis status.</p>';
                 document.getElementById('salesCodeSubdistrictDashboard').innerHTML = '<p class="text-danger text-center col-12">Gagal memuat data analisis kecamatan.</p>';
                 document.getElementById('monthlyNewCustomersDashboard').innerHTML = '<div class="col-12 chart-card-lg"><p class="text-danger text-center">Gagal memuat data analisis penjualan bulanan.</p></div>';
+                
+                document.getElementById('quarterlyRevenueChart').parentNode.innerHTML = '<canvas id="quarterlyRevenueChart"></canvas><p class="text-danger text-center">Gagal memuat data revenue kuartalan.</p>';
+                document.getElementById('monthlyRevenueChart').parentNode.innerHTML = '<canvas id="monthlyRevenueChart"></canvas><p class="text-danger text-center">Gagal memuat data revenue bulanan.</p>';
 
             }
         }
@@ -280,7 +337,7 @@
             Array.from(uniqueSalesCodes).sort().forEach(salesCode => {
                 const option = document.createElement('option');
                 option.value = salesCode;
-                option.textContent = salesCode;
+                option.textContent = `${salesCodeNames[salesCode] ? salesCodeNames[salesCode] + ' (' : ''}${salesCode}${salesCodeNames[salesCode] ? ')' : ''}`; // Menampilkan Sales Code dan Nama Sales Person
                 salesCodeFilter.appendChild(option);
             });
         }
@@ -362,7 +419,7 @@
             const contractAccount = customer.CONTRACTACCOUNT || '';
             const bpFullName = customer.BP_FULLNAME || 'Tidak Diketahui';
             let expiredDate = customer.EXPIREDDATE;
-            const bundleName = customer.BUNDLE_NAME || ''; // Get BUNDLE_NAME
+            const bundleName = customer.BUNDLE_NAME || ''; 
 
             if (expiredDate) {
                 try {
@@ -479,10 +536,13 @@
                 const totalCustomers = counts.reduce((sum, current) => sum + current, 0);
                 if (totalCustomers === 0) return; 
 
+                // Mendapatkan nama sales person
+                const salesPersonName = salesCodeNames[salesCode] ? ` (${salesCodeNames[salesCode]})` : '';
+
                 const chartContainer = document.createElement('div');
                 chartContainer.className = 'col-lg-4 col-md-6 col-sm-12 mb-4'; 
                 chartContainer.innerHTML = `<div class="chart-card card p-3">
-                                                <h5 class="card-title text-center mb-3">Sales Code: ${salesCode} (${totalCustomers} Customer)</h5>
+                                                <h5 class="card-title text-center mb-3">Sales Code: ${salesCode}${salesPersonName} (${totalCustomers} Customer)</h5>
                                                 <canvas id="statusChart_${salesCode}"></canvas>
                                             </div>`;
                 dashboardDiv.appendChild(chartContainer);
@@ -582,10 +642,13 @@
                 const labels = sortedSubdistricts.map(entry => entry[0]);
                 const counts = sortedSubdistricts.map(entry => entry[1]);
 
+                // Mendapatkan nama sales person
+                const salesPersonName = salesCodeNames[salesCode] ? ` (${salesCodeNames[salesCode]})` : '';
+
                 const chartContainer = document.createElement('div');
                 chartContainer.className = 'col-lg-6 col-md-12 mb-4'; 
                 chartContainer.innerHTML = `<div class="chart-card card p-3">
-                                                <h5 class="card-title text-center mb-3">Sales Code: ${salesCode} - Top 10 Kecamatan</h5>
+                                                <h5 class="card-title text-center mb-3">Sales Code: ${salesCode}${salesPersonName} - Top 10 Kecamatan</h5>
                                                 <canvas id="subdistrictChart_${salesCode}"></canvas>
                                             </div>`;
                 dashboardDiv.appendChild(chartContainer);
@@ -634,6 +697,7 @@
 
         function renderMonthlySalesChart(data) {
             const dashboardDiv = document.getElementById('monthlyNewCustomersDashboard');
+            // Recreate canvas to prevent Chart.js issues
             dashboardDiv.innerHTML = '<div class="col-12 chart-card-lg"><canvas id="monthlySalesChart"></canvas></div>'; 
 
             const monthlySales = {}; 
@@ -686,8 +750,9 @@
             sortedSalesCodes.forEach((salesCode, index) => {
                 const dataPoints = sortedMonths.map(month => monthlySales[month][salesCode] || 0);
                 const color = generateColor(index);
+                const salesPersonName = salesCodeNames[salesCode] ? ` (${salesCodeNames[salesCode]})` : ''; // Mendapatkan nama sales
                 datasets.push({
-                    label: salesCode,
+                    label: `${salesCode}${salesPersonName}`, // Menggabungkan sales code dan nama sales
                     data: dataPoints,
                     borderColor: color,
                     backgroundColor: color + '40', 
@@ -716,6 +781,13 @@
                         tooltip: {
                             mode: 'index',
                             intersect: false,
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    const label = tooltipItem.dataset.label || '';
+                                    const value = tooltipItem.raw;
+                                    return `${label}: ${value} Customer`;
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -741,7 +813,9 @@
                             const datasetIndex = element[0].datasetIndex;
                             const index = element[0].index;
                             const labelMonth = monthlySalesChartInstance.data.labels[index];
-                            const salesCodeClicked = monthlySalesChartInstance.data.datasets[datasetIndex].label;
+                            const salesCodeClickedWithAlias = monthlySalesChartInstance.data.datasets[datasetIndex].label;
+                            // Ekstrak hanya sales code dari label alias (misal "200602 (Riski Aprianto)")
+                            const salesCodeClicked = salesCodeClickedWithAlias.split(' ')[0];
                             showMonthlyCustomerDetails(labelMonth, salesCodeClicked);
                         }
                     }
@@ -752,8 +826,9 @@
         function showMonthlyCustomerDetails(monthYear, salesCode) {
             const [year, month] = monthYear.split('-');
             const monthName = new Date(year, parseInt(month) - 1, 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            const salesPersonName = salesCodeNames[salesCode] ? ` (${salesCodeNames[salesCode]})` : ''; // Mendapatkan nama sales
 
-            document.getElementById('monthlyDetailTitle').textContent = `Customer Baru untuk Sales Code: ${salesCode} di Bulan ${monthName}`;
+            document.getElementById('monthlyDetailTitle').textContent = `Customer Baru untuk Sales Code: ${salesCode}${salesPersonName} di Bulan ${monthName}`;
             const detailTableBody = document.getElementById('monthlyCustomerDetailTable').getElementsByTagName('tbody')[0];
             detailTableBody.innerHTML = ''; 
 
@@ -788,6 +863,173 @@
             $('#monthlyCustomerDetailModal').modal('show');
         }
 
+        // --- REVENUE CHART FUNCTIONS ---
+
+        function renderQuarterlyRevenueChart(data) {
+            const chartCanvasContainer = document.getElementById('quarterlyRevenueChart').parentNode;
+            chartCanvasContainer.innerHTML = '<canvas id="quarterlyRevenueChart"></canvas>'; // Recreate canvas element
+            const ctx = document.getElementById('quarterlyRevenueChart').getContext('2d');
+
+            const quarterlyRevenue = {}; // { 'YYYY-Qn': totalRevenue }
+
+            data.forEach(item => {
+                const year = item.tahun; 
+                const quarter = item.quartal; 
+                const revenue = parseFloat(item.revenue) || 0; 
+
+                if (year && quarter) {
+                    const quarterKey = `${year}-${quarter}`;
+                    quarterlyRevenue[quarterKey] = (quarterlyRevenue[quarterKey] || 0) + revenue;
+                }
+            });
+
+            const sortedQuarters = Object.keys(quarterlyRevenue).sort();
+            const labels = sortedQuarters.map(key => key); // e.g., "2023-Q1"
+            const revenues = sortedQuarters.map(key => quarterlyRevenue[key]);
+
+            if (quarterlyRevenueChartInstance) {
+                quarterlyRevenueChartInstance.destroy();
+            }
+
+            quarterlyRevenueChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Revenue',
+                        data: revenues,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return 'Revenue: ' + tooltipItem.raw.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Kuartal'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Revenue (IDR)'
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    // Format tick labels as IDR without currency symbol for readability on axis
+                                    return value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); 
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderMonthlyRevenueChart(data) {
+            const chartCanvasContainer = document.getElementById('monthlyRevenueChart').parentNode;
+            chartCanvasContainer.innerHTML = '<canvas id="monthlyRevenueChart"></canvas>'; // Recreate canvas element
+            const ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
+
+            const monthlyRevenue = {}; // { 'YYYY-MM': totalRevenue }
+
+            data.forEach(item => {
+                const year = item.tahun;
+                const monthName = item.bulan;
+                const revenue = parseFloat(item.revenue) || 0;
+
+                // Map month name to month number (0-11 for Date object, 1-12 for MM format)
+                const monthNames = ["jan", "feb", "mar", "apr", "mei", "jun", "jul", "agu", "sep", "okt", "nov", "des"];
+                const monthNum = monthNames.indexOf(monthName.toLowerCase()); // 0-indexed for Date object
+
+                if (year && monthNum !== -1) {
+                    const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`; // YYYY-MM format for sorting
+                    monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + revenue;
+                }
+            });
+
+            const sortedMonths = Object.keys(monthlyRevenue).sort();
+            const labels = sortedMonths.map(key => {
+                const [year, month] = key.split('-');
+                const date = new Date(year, parseInt(month) - 1, 1); // Month is 0-indexed for Date
+                return date.toLocaleString('id-ID', { month: 'short', year: 'numeric' }); // e.g., "Jun 2023"
+            });
+            const revenues = sortedMonths.map(key => monthlyRevenue[key]);
+
+            if (monthlyRevenueChartInstance) {
+                monthlyRevenueChartInstance.destroy();
+            }
+
+            monthlyRevenueChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Revenue',
+                        data: revenues,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.4)',
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return 'Revenue: ' + tooltipItem.raw.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Bulan'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Revenue (IDR)'
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
         // ===========================================
         // DASHBOARD JAVASCRIPT FUNCTIONS END
         // ===========================================
@@ -815,10 +1057,23 @@
                 }
             });
 
-            document.getElementById('toggleDashboardBtn').addEventListener('click', () => {
-                const dashboardSection = document.getElementById('customerDashboardSection');
-                dashboardSection.classList.toggle('d-none'); 
+            // New: Toggle buttons for dashboards
+            const customerDashboardSection = document.getElementById('customerDashboardSection');
+            const revenueDashboardSection = document.getElementById('revenueDashboardSection');
+
+            document.getElementById('toggleCustomerDashboardBtn').addEventListener('click', () => {
+                customerDashboardSection.classList.toggle('d-none');
+                revenueDashboardSection.classList.add('d-none'); // Hide revenue if customer is shown
             });
+
+            document.getElementById('toggleRevenueDashboardBtn').addEventListener('click', () => {
+                revenueDashboardSection.classList.toggle('d-none');
+                customerDashboardSection.classList.add('d-none'); // Hide customer if revenue is shown
+            });
+
+            // Initially show customer dashboard, hide revenue dashboard
+            customerDashboardSection.classList.remove('d-none');
+            revenueDashboardSection.classList.add('d-none');
         });
 
     </script>
