@@ -156,11 +156,14 @@
                 display: block; /* Ensure toggle is always visible on small screens */
                 margin-right: 1rem; /* Add some space to the right of the toggle */
             }
-
             /* Perbaikan VA modal agar lebih sempit dan tombol tidak terpotong di mobile */
             .va-print-content {
                 width: 95%; /* Make it narrower on mobile */
                 margin: 1rem auto; /* Center it with some margin */
+            }
+            /* Show floating sidebar toggle on small screens when sidebar is hidden */
+            .show-on-mobile-sidebar-closed {
+                display: block;
             }
         }
 
@@ -241,6 +244,24 @@
                 min-width: 2rem;
             }
         }
+        /* Floating button for sidebar */
+        #openSidebarBtn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000; /* Above most content, below modals */
+            background-color: #007bff;
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 9999px; /* Fully rounded */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: none; /* Hidden by default, shown by JS/media query */
+        }
+        #openSidebarBtn:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
     </style>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -251,70 +272,75 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex">
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-gray-800 text-white flex flex-col p-5 shadow-lg
+    <aside id="sidebar" class="w-64 bg-gray-700 text-white flex flex-col p-5 shadow-lg
                              transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out fixed inset-y-0 left-0 z-50">
         <div class="flex items-center justify-center mb-6">
             <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="h-20 w-auto">
         </div>
-        <h3 class="text-xl font-semibold text-center mb-6">Biznet Data</h3>
+        <h3 class="text-xl font-semibold text-center mb-6">Dashboard Branch Lampung Selatan Kalianda</h3>
         <nav class="flex-grow">
             <ul class="space-y-2">
                 <li>
-                    <a href="#" onclick="showSection('customerOverview')" class="flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <a href="#" onclick="showSection('customerOverview')" class="flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                         <i class="fas fa-users mr-3"></i> Customer Overview
                     </a>
                 </li>
                 <li>
-                    <a href="#analysisSubmenu" data-collapse-toggle="analysisSubmenu" aria-expanded="false" class="flex items-center justify-between p-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <a href="#analysisSubmenu" data-collapse-toggle="analysisSubmenu" aria-expanded="false" class="flex items-center justify-between p-3 rounded-lg text-gray-300 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                         <span><i class="fas fa-chart-bar mr-3"></i> Analisis</span>
                         <i class="fas fa-chevron-down text-xs"></i>
                     </a>
                     <ul id="analysisSubmenu" class="hidden ml-4 mt-2 space-y-2">
                         <li>
-                            <a href="#" onclick="showSection('customerStatusAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <a href="#" onclick="showSection('customerStatusAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                                 Status Customer
                             </a>
                         </li>
                         <li>
-                            <a href="#" onclick="showSection('kecamatanAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <a href="#" onclick="showSection('kecamatanAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                                 Distribusi per Kecamatan
                             </a>
                         </li>
                         <li>
-                            <a href="#" onclick="showSection('bundleNameAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <a href="#" onclick="showSection('bundleNameAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                                 Analisis Bundle Name
                             </a>
                         </li>
                         <li>
-                            <a href="#" onclick="showSection('modemStatusAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <a href="#" onclick="showSection('modemStatusAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                                 Analisis Status Modem
                             </a>
                         </li>
                         <li>
-                            <a href="#" onclick="showSection('netSubsAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <a href="#" onclick="showSection('netSubsAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                                 Analisis Net Subs
                             </a>
                         </li>
                         <li>
-                            <a href="#" onclick="showSection('dailyNewSubscribersAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <a href="#" onclick="showSection('dailyNewSubscribersAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                                 Daily New Subscribers
                             </a>
                         </li>
                         <li>
-                            <a href="#" onclick="showSection('forecastTerminationAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <a href="#" onclick="showSection('forecastTerminationAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                                 Forecast Terminasi
                             </a>
                         </li>
                     </ul>
                 </li>
                  <li>
-                    <a href="#" onclick="showSection('salesRanking')" class="flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <a href="#" onclick="showSection('salesRanking')" class="flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                         <i class="fas fa-trophy mr-3"></i> Sales Ranking
                     </a>
                 </li>
             </ul>
         </nav>
     </aside>
+
+    <!-- Floating button to open sidebar on mobile -->
+    <button id="openSidebarBtn" class="md:hidden" onclick="toggleSidebar()">
+        <i class="fas fa-bars mr-2"></i> Buka Menu
+    </button>
 
     <!-- Overlay for sidebar on mobile -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
@@ -326,6 +352,7 @@
                 <i class="fas fa-bars text-xl"></i>
             </button>
             <h1 class="text-xl font-semibold text-gray-800 text-center flex-1">Dashboard Data Customer Biznet Branch Kalianda</h1>
+            <div id="realTimeClock" class="text-gray-600 text-sm font-medium ml-4"></div>
         </header>
 
         <main class="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-auto">
@@ -423,7 +450,7 @@
                     <!-- Customer Table -->
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="customerTable">
-                            <thead class="bg-gray-800 text-white">
+                            <thead class="bg-gray-700 text-white">
                                 <tr>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">ID Partner Bisnis</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Nama Lengkap</th>
@@ -501,7 +528,7 @@
                             </div>
                             <div class="overflow-x-auto rounded-lg shadow-md">
                                 <table class="min-w-full bg-white table-custom" id="chartCustomerDetailTable">
-                                    <thead class="bg-gray-800 text-white">
+                                    <thead class="bg-gray-700 text-white">
                                         <tr>
                                             <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">BP_FULLNAME</th>
                                             <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTACCOUNT</th>
@@ -568,7 +595,7 @@
                     <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Status Customer per Sales Code</h3>
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="customerStatusTable">
-                            <thead class="bg-gray-800 text-white">
+                            <thead class="bg-gray-700 text-white">
                                 <tr>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">Sales Code</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">ACTIVE</th>
@@ -639,7 +666,7 @@
                     <div class="overflow-x-auto rounded-lg shadow-md mt-6">
                         <h4 class="text-lg font-bold text-gray-800 mb-3 text-center">Detail Customer Net Subs</h4>
                         <table class="min-w-full bg-white table-custom" id="netSubsDetailTable">
-                            <thead class="bg-gray-800 text-white">
+                            <thead class="bg-gray-700 text-white">
                                 <tr>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">BP_FULLNAME</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTACCOUNT</th>
@@ -693,7 +720,7 @@
                     <div class="overflow-x-auto rounded-lg shadow-md mt-6">
                         <h4 class="text-lg font-bold text-gray-800 mb-3 text-center" id="dailyNewSubsTableTitle">Detail Customer Baru Harian</h4>
                         <table class="min-w-full bg-white table-custom" id="dailyNewSubsDetailTable">
-                            <thead class="bg-gray-800 text-white">
+                            <thead class="bg-gray-700 text-white">
                                 <tr>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">BP_FULLNAME</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTACCOUNT</th>
@@ -743,7 +770,7 @@
                     <div class="overflow-x-auto rounded-lg shadow-md mt-6">
                         <h4 class="text-lg font-bold text-gray-800 mb-3 text-center" id="forecastTerminationTableTitle">Detail Customer Forecast Terminasi</h4>
                         <table class="min-w-full bg-white table-custom" id="forecastTerminationDetailTable">
-                            <thead class="bg-gray-800 text-white">
+                            <thead class="bg-gray-700 text-white">
                                 <tr>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">BP_FULLNAME</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTACCOUNT</th>
@@ -763,6 +790,11 @@
                     <div id="forecastTerminationChartError" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mt-4 hidden"></div>
                 </div>
             </section>
+            
+            <!-- Data Update History -->
+            <div id="lastUpdateInfo" class="mt-8 text-center text-gray-600 text-sm p-4 bg-gray-50 rounded-lg shadow-sm">
+                Informasi Pembaruan Data: Belum ada pembaruan.
+            </div>
 
         </main>
     </div>
@@ -834,6 +866,55 @@
             return monthNames[monthNumber];
         };
 
+        // Fungsi untuk mengupdate jam real-time
+        function updateClock() {
+            const now = new Date();
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            document.getElementById('realTimeClock').textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        // Fungsi untuk toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const openSidebarBtn = document.getElementById('openSidebarBtn');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            sidebar.classList.toggle('-translate-x-full');
+            // Toggle visibility of the overlay and floating button based on sidebar state
+            if (sidebar.classList.contains('-translate-x-full')) {
+                overlay.classList.add('hidden'); // Hide overlay when sidebar is closed
+                // Show floating button only on mobile when sidebar is closed
+                if (window.innerWidth <= 768) {
+                     openSidebarBtn.classList.remove('hidden');
+                }
+            } else {
+                overlay.classList.remove('hidden'); // Show overlay when sidebar is open
+                openSidebarBtn.classList.add('hidden'); // Hide floating button when sidebar is open
+            }
+        }
+
+        // Fungsi untuk menutup sidebar (dipanggil dari overlay)
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const openSidebarBtn = document.getElementById('openSidebarBtn');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+            // Show floating button only on mobile after closing sidebar
+            if (window.innerWidth <= 768) {
+                openSidebarBtn.classList.remove('hidden');
+            }
+        }
+
 
         function showSection(sectionId) {
             // Sembunyikan semua bagian konten
@@ -845,12 +926,12 @@
 
             // Perbarui status aktif di sidebar
             document.querySelectorAll('#sidebar ul li a').forEach(link => {
-                link.classList.remove('bg-gray-700', 'text-white');
-                link.classList.add('text-gray-300', 'hover:bg-gray-700', 'hover:text-white');
+                link.classList.remove('bg-gray-600', 'text-white');
+                link.classList.add('text-gray-300', 'hover:bg-gray-600', 'hover:text-white');
             });
             const clickedLink = document.querySelector(`#sidebar a[onclick="showSection('${sectionId}')"]`);
             if (clickedLink) {
-                clickedLink.classList.add('bg-gray-700', 'text-white');
+                clickedLink.classList.add('bg-gray-600', 'text-white');
                 clickedLink.classList.remove('text-gray-300');
             }
 
@@ -980,6 +1061,7 @@
             document.getElementById('customerOverview').classList.add('hidden'); 
             document.getElementById('sidebar').classList.add('-translate-x-full'); 
             document.getElementById('analysisSubmenu').classList.add('hidden'); 
+            document.getElementById('openSidebarBtn').classList.add('hidden'); // Hide floating button during load
 
             try {
                 const response = await fetch(customerWebAppUrl);
@@ -1003,6 +1085,15 @@
                 populateSalesCodeFilter();
                 renderCustomerTable(currentPage);
                 updateDashboardSummaryAndChart(); // Panggil fungsi yang diperbarui
+
+                // Update last data update info
+                const now = new Date();
+                const options = {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit',
+                    hour12: false
+                };
+                document.getElementById('lastUpdateInfo').textContent = `Data terakhir diperbarui pada: ${now.toLocaleDateString('id-ID', options)}`;
 
             } catch (error) {
                 console.error('Error mengambil data pelanggan dari Apps Script:', error);
@@ -1030,6 +1121,10 @@
             } finally {
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('customerOverview').classList.remove('hidden'); 
+                 // Show floating button if sidebar is initially closed on mobile
+                if (window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('-translate-x-full')) {
+                    document.getElementById('openSidebarBtn').classList.remove('hidden');
+                }
             }
         }
 
@@ -2904,11 +2999,27 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchCustomerData();
             populateMonthYearSelectors(); // Panggil fungsi ini saat DOM dimuat
+            updateClock(); // Update clock immediately
+            setInterval(updateClock, 1000); // Update clock every second
 
             // Fungsionalitas toggle sidebar untuk mobile
-            document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+            document.getElementById('openSidebarBtn').addEventListener('click', toggleSidebar);
+
+            // Perhatikan perubahan ukuran layar untuk mengelola visibilitas tombol
+            window.addEventListener('resize', () => {
                 const sidebar = document.getElementById('sidebar');
-                sidebar.classList.toggle('-translate-x-full');
+                const openSidebarBtn = document.getElementById('openSidebarBtn');
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('-translate-x-full');
+                    openSidebarBtn.classList.add('hidden'); // Hide on desktop
+                } else {
+                    if (sidebar.classList.contains('-translate-x-full')) {
+                        openSidebarBtn.classList.remove('hidden'); // Show on mobile if sidebar is closed
+                    } else {
+                        openSidebarBtn.classList.add('hidden'); // Hide on mobile if sidebar is open
+                    }
+                }
             });
 
             // Ciutkan/perluas submenu analisis
