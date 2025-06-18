@@ -467,6 +467,7 @@
                     <div id="vaModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1060]">
                         <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2 va-print-content transform scale-95 opacity-0 transition-all duration-300">
                             <div class="text-center mb-6 border-b pb-4">
+                                <!-- UPDATED: Menggunakan gambar logo Biznet yang benar -->
                                 <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="h-16 mx-auto mb-2">
                                 <h5 class="text-2xl font-bold text-gray-800">Virtual Account Pembayaran</h5>
                                 <p class="text-gray-600">INVOICE</p>
@@ -790,7 +791,7 @@
             });
             const clickedLink = document.querySelector(`#sidebar a[onclick="showSection('${sectionId}')"]`);
             if (clickedLink) {
-                clickedLink.add('bg-gray-700', 'text-white');
+                clickedLink.classList.add('bg-gray-700', 'text-white');
                 clickedLink.classList.remove('text-gray-300');
             }
 
@@ -1246,9 +1247,10 @@
 
             html2canvas(vaModalContent, {
                 scale: 2,
-                useCORS: true,
+                useCORS: true, // Pastikan ini true
                 logging: false, 
-                backgroundColor: '#ffffff' // Pastikan latar belakang putih untuk cetak
+                backgroundColor: '#ffffff', // Pastikan latar belakang putih untuk cetak
+                allowTaint: false // Set to false to avoid tainting the canvas if cross-origin images are not handled correctly
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `VA_Invoice_${(customer.BP_FULLNAME || 'Unknown').replace(/\s/g, '_')}.jpg`;
@@ -1256,7 +1258,8 @@
                 link.click();
             }).catch(error => {
                 console.error("Gagal membuat gambar VA:", error);
-                alert("Gagal membuat gambar VA. Silakan coba lagi. Pastikan logo-biznet-blue-trans.png berada di direktori yang sama.");
+                // Menampilkan pesan error yang lebih jelas
+                alert("Gagal membuat gambar VA. Ini mungkin karena gambar logo tidak dapat diakses. Pastikan gambar logo dihosting di server publik dengan CORS yang benar, atau gunakan gambar yang berasal dari domain yang sama.");
             }).finally(() => {
                 // Restore original styles after capture
                 vaModalContent.style.maxHeight = originalMaxHeight;
