@@ -42,7 +42,7 @@
         /* Gaya untuk chart container agar responsif dan lebih simetris */
         .chart-container {
             position: relative;
-            height: 350px; /* Sedikit lebih pendek untuk tampilan lebih padat */
+            height: 350px; /* Sedikit lebih pendek untuk tampilan padat */
             width: 100%;
             max-width: 800px; /* Batasi lebar maksimum untuk simetri */
             margin: 0 auto; /* Tengahkankan chart */
@@ -296,6 +296,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="#" onclick="showSection('dailyNewSubscribersAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                                Daily New Subscribers
+                            </a>
+                        </li>
+                        <li>
                             <a href="#" onclick="showSection('forecastTerminationAnalysis')" class="flex items-center p-2 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors duration-200">
                                 Forecast Terminasi
                             </a>
@@ -467,7 +472,6 @@
                     <div id="vaModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1060]">
                         <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2 va-print-content transform scale-95 opacity-0 transition-all duration-300">
                             <div class="text-center mb-6 border-b pb-4">
-                                <!-- UPDATED: Menggunakan gambar logo Biznet yang benar -->
                                 <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="h-16 mx-auto mb-2">
                                 <h5 class="text-2xl font-bold text-gray-800">Virtual Account Pembayaran</h5>
                                 <p class="text-gray-600">INVOICE</p>
@@ -659,6 +663,56 @@
                 </div>
             </section>
 
+            <section id="dailyNewSubscribersAnalysis" class="content-section hidden">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Daily New Subscribers (MoM)</h3>
+                    <div class="mb-4 flex flex-wrap gap-4 items-center justify-center">
+                        <div>
+                            <label for="newSubsMonthSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Bulan:</label>
+                            <select id="newSubsMonthSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="newSubsYearSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Tahun:</label>
+                            <select id="newSubsYearSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <button id="applyNewSubsFilterBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 self-end">
+                            Terapkan
+                        </button>
+                    </div>
+                    <!-- Total Count Display for Daily New Subscribers -->
+                    <div id="totalNewSubsCountDisplay" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-4 text-center" role="alert">
+                        Total Pelanggan Baru: 0
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="dailyNewSubsChart"></canvas>
+                    </div>
+                    <div class="overflow-x-auto rounded-lg shadow-md mt-6">
+                        <h4 class="text-lg font-bold text-gray-800 mb-3 text-center" id="dailyNewSubsTableTitle">Detail Customer Baru Harian</h4>
+                        <table class="min-w-full bg-white table-custom" id="dailyNewSubsDetailTable">
+                            <thead class="bg-gray-800 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">BP_FULLNAME</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTACCOUNT</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">SALESCODE</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">STATUS</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTSTARTDATE</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Customer details for Daily New Subs will be loaded here -->
+                            </tbody>
+                        </table>
+                        <p id="dailyNewSubsDetailTableMessage" class="text-center text-gray-600 p-4 hidden"></p>
+                    </div>
+                    <div id="dailyNewSubsChartError" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mt-4 hidden"></div>
+                </div>
+            </section>
+
             <section id="forecastTerminationAnalysis" class="content-section hidden">
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Daily Termination Subscribers (MoM & Forecast)</h3>
@@ -678,6 +732,10 @@
                         <button id="applyForecastFilterBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 self-end">
                             Terapkan
                         </button>
+                    </div>
+                    <!-- Total Count Display for Forecast Termination -->
+                    <div id="totalForecastTerminationCountDisplay" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-4 text-center" role="alert">
+                        Total Terminasi Aktif: 0 | Total Forecast Terminasi: 0
                     </div>
                     <div class="chart-container">
                         <canvas id="forecastTerminationChart"></canvas>
@@ -763,6 +821,7 @@
         let bundleNameChartInstance = null;
         let modemStatusChartInstance = null;
         let netSubsChartInstance = null; // Net Subs Chart
+        let dailyNewSubsChartInstance = null; // New: Daily New Subscribers Chart
         let forecastTerminationChartInstance = null; // New chart for forecast termination
 
         // --- UTILITY FUNCTIONS ---
@@ -835,6 +894,22 @@
                 updateNetSubsDetailTable([]); // Kosongkan tabel saat memuat bagian
             }
             if (sectionId === 'salesRanking') renderSalesRanking(); // Render sales ranking
+            if (sectionId === 'dailyNewSubscribersAnalysis') { // New section for daily new subscribers
+                // Initialize month and year filter for daily new subscribers
+                const now = new Date();
+                const currentMonth = now.getMonth(); // 0-11
+                const currentYear = now.getFullYear();
+
+                const monthSelect = document.getElementById('newSubsMonthSelect');
+                const yearSelect = document.getElementById('newSubsYearSelect');
+
+                // Set default values to current month and year
+                monthSelect.value = currentMonth.toString();
+                yearSelect.value = currentYear.toString();
+
+                renderDailyNewSubsChart();
+                updateDailyNewSubsDetailTable([]);
+            }
             if (sectionId === 'forecastTerminationAnalysis') { // New section for forecast termination
                 // Inisialisasi filter bulan dan tahun saat pertama kali masuk ke bagian ini
                 const now = new Date();
@@ -944,6 +1019,8 @@
                 document.getElementById('modemStatusError').textContent = `Error: ${error.message}`;
                 document.getElementById('netSubsChartError').classList.remove('hidden');
                 document.getElementById('netSubsChartError').textContent = `Error: ${error.message}`;
+                document.getElementById('dailyNewSubsChartError').classList.remove('hidden'); // New error display
+                document.getElementById('dailyNewSubsChartError').textContent = `Error: ${error.message}`;
                 document.getElementById('forecastTerminationChartError').classList.remove('hidden');
                 document.getElementById('forecastTerminationChartError').textContent = `Error: ${error.message}`;
 
@@ -2241,6 +2318,191 @@
             });
         }
 
+        // NEW: Function to render Daily New Subscribers Chart
+        function renderDailyNewSubsChart() {
+            const ctx = document.getElementById('dailyNewSubsChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+
+            if (dailyNewSubsChartInstance) {
+                dailyNewSubsChartInstance.destroy();
+            }
+
+            const monthSelect = document.getElementById('newSubsMonthSelect');
+            const yearSelect = document.getElementById('newSubsYearSelect');
+            const selectedMonth = parseInt(monthSelect.value, 10); // 0-11
+            const selectedYear = parseInt(yearSelect.value, 10);
+
+            // Get number of days in the selected month
+            const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+            const labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`); // Days 1 to 31
+
+            const newSubscribersDaily = new Array(daysInMonth).fill(0);
+
+            // Filter customers for the selected month and year, only for 'ACTIVE' status
+            allCustomers.forEach(customer => {
+                const contractDate = parseDate(customer.CONTRACTSTARTDATE);
+                if (contractDate && customer.STATUS && customer.STATUS.toUpperCase() === 'ACTIVE' &&
+                    contractDate.getFullYear() === selectedYear && contractDate.getMonth() === selectedMonth) {
+                    const dayIndex = contractDate.getDate() - 1; // Array index 0-based
+                    newSubscribersDaily[dayIndex]++;
+                }
+            });
+
+            const totalNewSubs = newSubscribersDaily.reduce((sum, value) => sum + value, 0);
+            document.getElementById('totalNewSubsCountDisplay').textContent = `Total Pelanggan Baru: ${formatNumber(totalNewSubs)}`;
+
+
+            const hasData = newSubscribersDaily.some(val => val > 0);
+
+            if (!hasData) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                document.getElementById('dailyNewSubsChartError').classList.remove('hidden');
+                document.getElementById('dailyNewSubsChartError').textContent = `Tidak ada data pelanggan baru untuk ${getMonthName(selectedMonth)} ${selectedYear}.`;
+                updateDailyNewSubsDetailTable([]);
+                return;
+            } else {
+                document.getElementById('dailyNewSubsChartError').classList.add('hidden');
+            }
+
+            dailyNewSubsChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'New Subscribers (MoM)',
+                            data: newSubscribersDaily,
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)', // Greenish-blue
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#333',
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `Daily New Subscribers (MoM) ${getMonthName(selectedMonth)} ${selectedYear}`,
+                            color: '#333'
+                        },
+                        datalabels: {
+                            color: '#333',
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 5,
+                            formatter: (value) => value > 0 ? value : '', // Only show label if value > 0
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw;
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tanggal',
+                                color: '#333'
+                            },
+                            ticks: {
+                                color: '#333'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Jumlah Customer Baru',
+                                color: '#333'
+                            },
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                color: '#333'
+                            },
+                            grid: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    },
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0) {
+                            const firstElement = elements[0];
+                            const dataIndex = firstElement.index;
+                            const clickedDay = dataIndex + 1; // 1-based day
+
+                            let customersForTable = allCustomers.filter(customer => {
+                                const contractDate = parseDate(customer.CONTRACTSTARTDATE);
+                                return contractDate && customer.STATUS && customer.STATUS.toUpperCase() === 'ACTIVE' &&
+                                       contractDate.getFullYear() === selectedYear &&
+                                       contractDate.getMonth() === selectedMonth &&
+                                       contractDate.getDate() === clickedDay;
+                            });
+                            updateDailyNewSubsDetailTable(customersForTable, `${clickedDay} ${getMonthName(selectedMonth)} ${selectedYear}`);
+                        } else {
+                            updateDailyNewSubsDetailTable([]);
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // NEW: Helper function to update dailyNewSubsDetailTable
+        function updateDailyNewSubsDetailTable(customers, clickedDateLabel) {
+            const tableBody = document.querySelector('#dailyNewSubsDetailTable tbody');
+            const messageElement = document.getElementById('dailyNewSubsDetailTableMessage');
+            const tableTitle = document.getElementById('dailyNewSubsTableTitle');
+            tableBody.innerHTML = '';
+
+            tableTitle.textContent = `Detail Customer Baru Harian ${clickedDateLabel || ''}`;
+
+            if (customers.length === 0) {
+                messageElement.textContent = `Tidak ada customer baru pada ${clickedDateLabel || 'tanggal yang dipilih'}.`;
+                messageElement.classList.remove('hidden');
+            } else {
+                messageElement.classList.add('hidden');
+                customers.forEach(customer => {
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = customer.BP_FULLNAME || '-';
+                    row.insertCell().textContent = customer.CONTRACTACCOUNT || '-';
+                    row.insertCell().textContent = salesCodeNames[customer.SALESCODE] ? `${salesCodeNames[customer.SALESCODE]} (${customer.SALESCODE})` : customer.SALESCODE || '-';
+                    row.insertCell().textContent = customer.STATUS || '-';
+                    row.insertCell().textContent = customer.CONTRACTSTARTDATE || '-';
+                    
+                    const actionCell = row.insertCell();
+                    const vaButton = document.createElement('button');
+                    vaButton.classList.add('px-3', 'py-1', 'bg-blue-500', 'text-white', 'rounded-md', 'hover:bg-blue-600', 'text-sm');
+                    vaButton.textContent = 'Lihat VA';
+                    vaButton.onclick = () => showVaDetail(customer);
+                    actionCell.appendChild(vaButton);
+                    
+                    row.classList.add('hover:bg-gray-50');
+                    row.querySelectorAll('td').forEach(cell => cell.classList.add('py-2', 'px-4', 'text-sm', 'text-gray-700', 'whitespace-nowrap'));
+                });
+            }
+        }
+
 
         // NEW: Function to render Forecast Termination Chart
         function renderForecastTerminationChart() {
@@ -2267,7 +2529,14 @@
             const actualTerminations = new Array(daysInMonth).fill(0);
             const forecastTerminations = new Array(daysInMonth).fill(0);
 
-            allCustomers.forEach(customer => {
+            // Filter data dari 2023 dan seterusnya
+            const relevantCustomersForTermination = allCustomers.filter(customer => {
+                const termDate = parseDate(customer.TERMDATE);
+                return termDate && termDate.getFullYear() >= 2023; // Start from 2023
+            });
+
+
+            relevantCustomersForTermination.forEach(customer => {
                 const termDate = parseDate(customer.TERMDATE);
 
                 if (termDate && termDate.getFullYear() === selectedYear && termDate.getMonth() === selectedMonth) {
@@ -2286,6 +2555,11 @@
                     }
                 }
             });
+
+            const totalActualTerminations = actualTerminations.reduce((sum, value) => sum + value, 0);
+            const totalForecastTerminations = forecastTerminations.reduce((sum, value) => sum + value, 0);
+            document.getElementById('totalForecastTerminationCountDisplay').textContent = `Total Terminasi Aktif: ${formatNumber(totalActualTerminations)} | Total Forecast Terminasi: ${formatNumber(totalForecastTerminations)}`;
+
 
             const hasData = actualTerminations.some(val => val > 0) || forecastTerminations.some(val => val > 0);
 
@@ -2578,41 +2852,58 @@
             });
         }
 
-        // Populate Month and Year Selectors for Forecast
-        function populateForecastMonthYearSelectors() {
-            const monthSelect = document.getElementById('forecastMonthSelect');
-            const yearSelect = document.getElementById('forecastYearSelect');
+        // Populate Month and Year Selectors for Forecast and New Subs
+        function populateMonthYearSelectors() {
+            const monthSelectors = [
+                document.getElementById('forecastMonthSelect'),
+                document.getElementById('newSubsMonthSelect')
+            ];
+            const yearSelectors = [
+                document.getElementById('forecastYearSelect'),
+                document.getElementById('newSubsYearSelect')
+            ];
             const currentYear = new Date().getFullYear();
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-            // Populate Months
-            monthSelect.innerHTML = '';
-            monthNames.forEach((name, index) => {
-                const option = document.createElement('option');
-                option.value = index; // Month index (0-11)
-                option.textContent = name;
-                monthSelect.appendChild(option);
+            monthSelectors.forEach(selectElement => {
+                selectElement.innerHTML = '';
+                monthNames.forEach((name, index) => {
+                    const option = document.createElement('option');
+                    option.value = index; // Month index (0-11)
+                    option.textContent = name;
+                    selectElement.appendChild(option);
+                });
             });
 
-            // Populate Years (e.g., current year - 2 to current year + 5)
-            yearSelect.innerHTML = '';
-            for (let year = currentYear - 2; year <= currentYear + 5; year++) {
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                yearSelect.appendChild(option);
-            }
+            yearSelectors.forEach(selectElement => {
+                selectElement.innerHTML = '';
+                // Adjusted to go back to 2023 for data filtering
+                for (let year = 2023; year <= currentYear + 5; year++) { // Start from 2023
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    selectElement.appendChild(option);
+                }
+            });
 
-            // Set default to current month and year
-            monthSelect.value = new Date().getMonth().toString();
-            yearSelect.value = new Date().getFullYear().toString();
+            // Set default to current month and year for all
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentFullYear = now.getFullYear();
+
+            monthSelectors.forEach(selectElement => {
+                selectElement.value = currentMonth.toString();
+            });
+            yearSelectors.forEach(selectElement => {
+                selectElement.value = currentFullYear.toString();
+            });
         }
 
 
         // --- PENDENGAR ACARA & MUATAN AWAL ---
         document.addEventListener('DOMContentLoaded', () => {
             fetchCustomerData();
-            populateForecastMonthYearSelectors(); // Panggil fungsi ini saat DOM dimuat
+            populateMonthYearSelectors(); // Panggil fungsi ini saat DOM dimuat
 
             // Fungsionalitas toggle sidebar untuk mobile
             document.getElementById('sidebarToggle').addEventListener('click', function() {
@@ -2653,6 +2944,11 @@
         // Pendengar Acara untuk Filter Bagian Analisis
         document.getElementById('salesCodeKecamatanFilter').addEventListener('change', renderKecamatanChart);
         document.getElementById('salesCodeNetSubsFilter').addEventListener('change', renderNetSubsChart);
+
+        // Pendengar Acara untuk Filter Daily New Subscribers
+        document.getElementById('applyNewSubsFilterBtn').addEventListener('click', renderDailyNewSubsChart);
+        document.getElementById('newSubsMonthSelect').addEventListener('change', renderDailyNewSubsChart);
+        document.getElementById('newSubsYearSelect').addEventListener('change', renderDailyNewSubsChart);
 
         // Pendengar Acara untuk Filter Forecast Terminasi
         document.getElementById('applyForecastFilterBtn').addEventListener('click', renderForecastTerminationChart);
