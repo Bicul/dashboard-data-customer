@@ -11,6 +11,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f0f2f5; /* Latar belakang abu-abu muda yang lebih menarik */
+            /* overflow-x: hidden; */ /* Mencegah overflow horizontal yang tidak diinginkan pada seluruh body - DIHAPUS */
         }
         /* Custom scrollbar untuk tampilan yang lebih baik */
         ::-webkit-scrollbar {
@@ -106,11 +107,10 @@
             .chart-container {
                 height: 300px; /* Lebih pendek di layar kecil */
             }
-            .grid-cols-1-md-grid-cols-3 {
-                grid-template-columns: 1fr; /* Stack cards vertically on small screens */
-            }
-            .md\:grid-cols-4 {
-                grid-template-columns: 1fr; /* Stack filters vertically on small screens */
+            /* Grid untuk ringkasan kartu dan filter akan menumpuk secara default karena `grid-cols-1` */
+            /* Ranking cards now explicitly take full width on small screens */
+            .ranking-card {
+                width: 100%;
             }
             .md\:w-3\/4 {
                 width: 95%; /* Make modals wider on small screens */
@@ -120,6 +120,24 @@
             }
             .md\:w-5\/6 {
                 width: 95%;
+            }
+            /* Adjust padding for main content on small screens */
+            main.flex-1 {
+                padding: 1rem; /* Kurangi padding untuk lebih banyak ruang */
+            }
+            /* Center header content on mobile */
+            header.flex-1 {
+                justify-content: space-between;
+            }
+            header h1 {
+                font-size: 1.125rem; /* text-lg */
+                margin-left: 0; /* Remove left margin on mobile */
+                text-align: center;
+                flex-grow: 1; /* Allow title to take available space */
+            }
+            #sidebarToggle {
+                display: block; /* Ensure toggle is always visible on small screens */
+                margin-right: 1rem; /* Add some space to the right of the toggle */
             }
         }
 
@@ -137,24 +155,33 @@
         .ranking-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 0.75rem; /* Menggunakan gap untuk jarak antar elemen */
             padding: 0.75rem 1rem;
             margin-bottom: 0.5rem;
             border-radius: 10px;
             font-size: 1.1rem;
             font-weight: 600;
             transition: background-color 0.2s ease;
+            flex-wrap: nowrap; /* Mencegah item ranking untuk wrap ke baris baru */
         }
         .ranking-item .rank-number {
             font-size: 1.5rem;
-            margin-right: 0.75rem;
             width: 2rem;
+            height: 2rem; /* Make it a perfect circle */
             text-align: center;
-            color: #333;
+            color: #fff; /* Changed to white for better contrast */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; /* Prevent it from shrinking */
         }
         .ranking-item .sales-name {
             flex-grow: 1;
             color: #333;
+            white-space: nowrap; /* Prevent name from wrapping */
+            overflow: hidden; /* Hide overflow text */
+            text-overflow: ellipsis; /* Add ellipsis for overflow */
+            min-width: 60px; /* Memberi lebar minimum untuk nama sales */
         }
         .ranking-item .sales-count {
             font-size: 1.25rem;
@@ -164,6 +191,7 @@
             text-align: center;
             font-weight: 700;
             color: white; /* Default text color for counts */
+            flex-shrink: 0; /* Prevent count from shrinking */
         }
         /* Specific colors for ranking counts */
         .sales-new-count { background-color: #28a745; /* Green */ }
@@ -174,6 +202,27 @@
         .rank-bg-1 { background-color: #FFD700; /* Gold */ }
         .rank-bg-2 { background-color: #C0C0C0; /* Silver */ }
         .rank-bg-3 { background-color: #CD7F32; /* Bronze */ }
+
+        /* Mobile-specific adjustments for ranking items */
+        @media (max-width: 640px) { /* Tailwind's sm breakpoint */
+            .ranking-item {
+                padding: 0.5rem 0.75rem; /* Reduce padding */
+                font-size: 1rem; /* Slightly smaller font */
+            }
+            .ranking-item .rank-number {
+                font-size: 1.2rem; /* Adjust rank number size */
+                width: 1.8rem;
+                height: 1.8rem;
+            }
+            .ranking-item .sales-count {
+                font-size: 1.1rem; /* Adjust count size */
+                padding: 0.2rem 0.6rem;
+                min-width: 2rem;
+            }
+            .ranking-item .sales-name {
+                min-width: 40px; /* Reduce min-width for mobile */
+            }
+        }
     </style>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -185,7 +234,7 @@
 <body class="bg-gray-100 min-h-screen flex">
     <!-- Sidebar -->
     <aside id="sidebar" class="w-64 bg-gray-800 text-white flex flex-col p-5 shadow-lg
-                             transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+                             transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out fixed inset-y-0 left-0 z-50">
         <div class="flex items-center justify-center mb-6">
             <img src="logo-biznet-blue-trans.png" alt="Biznet Logo" class="h-20 w-auto">
         </div>
@@ -239,16 +288,19 @@
         </nav>
     </aside>
 
+    <!-- Overlay for sidebar on mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+
     <!-- Main Content Area -->
-    <div id="content" class="flex-1 flex flex-col transition-all duration-300 ease-in-out">
-        <header class="bg-white shadow p-4 flex items-center justify-between lg:justify-center">
-            <button id="sidebarToggle" class="text-gray-600 focus:outline-none md:hidden">
+    <div id="content" class="flex-1 flex flex-col transition-all duration-300 ease-in-out md:ml-64">
+        <header class="bg-white shadow p-4 flex items-center justify-between">
+            <button id="sidebarToggle" class="text-gray-600 focus:outline-none md:hidden" onclick="toggleSidebar()">
                 <i class="fas fa-bars text-xl"></i>
             </button>
-            <h1 class="text-xl font-semibold text-gray-800 ml-4 lg:ml-0">Dashboard Data Customer Biznet Branch Kalianda</h1>
+            <h1 class="text-xl font-semibold text-gray-800 text-center flex-1">Dashboard Data Customer Biznet Branch Kalianda</h1>
         </header>
 
-        <main class="flex-1 p-6 overflow-y-auto">
+        <main class="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-auto">
             <!-- Loading Spinner -->
             <div id="loading" class="hidden flex flex-col items-center justify-center h-64">
                 <div class="animate-spin rounded-full h-12 w-12 border-4 border-t-4 border-blue-500 border-opacity-75"></div>
@@ -756,11 +808,17 @@
             try {
                 const response = await fetch(customerWebAppUrl);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                    let errorMessage = `HTTP error! status: ${response.status} - ${response.statusText}. `;
+                    if (response.status === 401 || response.status === 403) {
+                        errorMessage += "Ini kemungkinan besar masalah izin Google Apps Script. Pastikan Web App di-deploy dengan akses 'Anyone' dan Google Sheet dibagikan dengan benar.";
+                    } else {
+                        errorMessage += "Ada masalah saat menghubungi server Google Apps Script.";
+                    }
+                    throw new Error(errorMessage);
                 }
                 const result = await response.json();
                 if (!Array.isArray(result)) {
-                    throw new Error("Data dari Apps Script bukan array. Periksa format keluaran Apps Script Anda.");
+                    throw new Error("Data dari Apps Script bukan array. Periksa format keluaran Apps Script Anda. Mungkin ada pesan error dari Apps Script dalam format non-JSON.");
                 }
                 
                 allCustomers = result;
@@ -787,7 +845,7 @@
                 document.getElementById('netSubsChartError').textContent = `Error: ${error.message}`;
 
                 const tableBody = document.querySelector('#customerTable tbody');
-                tableBody.innerHTML = `<tr><td colspan="38" class="text-center text-red-500">Gagal memuat data: ${error.message}. Pastikan URL Apps Script benar dan Apps Script berfungsi.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="38" class="text-center text-red-500">Gagal memuat data: ${error.message}. Silakan cek ulang konfigurasi Google Apps Script Anda.</td></tr>`;
             } finally {
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('customerOverview').classList.remove('hidden'); 
@@ -872,7 +930,10 @@
 
             // Tombol Previous
             const prevLi = document.createElement('li');
-            prevLi.classList.add('page-item', 'mr-2', (currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''));
+            prevLi.classList.add('page-item', 'mr-2');
+            if (currentPage === 1) { // Add classes separately if currentPage is 1
+                prevLi.classList.add('opacity-50', 'cursor-not-allowed');
+            }
             const prevA = document.createElement('a');
             prevA.classList.add('px-3', 'py-2', 'bg-white', 'border', 'border-gray-300', 'rounded-lg', 'text-gray-700', 'hover:bg-gray-200');
             prevA.href = '#';
@@ -890,9 +951,12 @@
             // Nomor halaman
             for (let i = startPage; i <= endPage; i++) {
                 const li = document.createElement('li');
-                li.classList.add('page-item', 'mr-2', (i === currentPage ? 'bg-blue-500 text-white rounded-lg' : ''));
+                li.classList.add('page-item', 'mr-2');
                 const a = document.createElement('a');
-                a.classList.add('px-3', 'py-2', 'bg-white', 'border', 'border-gray-300', 'rounded-lg', 'text-gray-700', 'hover:bg-gray-200', (i === currentPage ? 'bg-blue-500 text-white hover:bg-blue-600' : ''));
+                a.classList.add('px-3', 'py-2', 'bg-white', 'border', 'border-gray-300', 'rounded-lg', 'text-gray-700', 'hover:bg-gray-200');
+                if (i === currentPage) { // Add active classes separately
+                    a.classList.add('bg-blue-500', 'text-white', 'hover:bg-blue-600');
+                }
                 a.href = '#';
                 a.textContent = i;
                 a.onclick = (e) => {
@@ -906,7 +970,10 @@
 
             // Tombol Next
             const nextLi = document.createElement('li');
-            nextLi.classList.add('page-item', (currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''));
+            nextLi.classList.add('page-item');
+            if (currentPage === totalPages) { // Add classes separately if currentPage is totalPages
+                nextLi.classList.add('opacity-50', 'cursor-not-allowed');
+            }
             const nextA = document.createElement('a');
             nextA.classList.add('px-3', 'py-2', 'bg-white', 'border', 'border-gray-300', 'rounded-lg', 'text-gray-700', 'hover:bg-gray-200');
             nextA.href = '#';
@@ -1166,7 +1233,28 @@
                             match = false;
                             break;
                         }
-                    } else {
+                    } else if (filter.column === 'MODEM_STATUS_PROMO') {
+                        // Logic for MODEM_STATUS_PROMO
+                        const promoCode = (customer.PROMO_CODE || '').toUpperCase();
+                        const modemStatus = (customer.MODEM_STATUS || '').toUpperCase();
+                        if (filter.value === 'MODEM DIPINJAMKAN') {
+                            if (!((promoCode === 'MODEMPROMO25' || promoCode === 'MODEMWIFIPROMO') || modemStatus === 'RENT')) {
+                                match = false;
+                                break;
+                            }
+                        } else if (filter.value === 'RENT') {
+                             if (!(modemStatus === 'RENT' && !(promoCode === 'MODEMPROMO25' || promoCode === 'MODEMWIFIPROMO'))) {
+                                 match = false;
+                                 break;
+                             }
+                        } else {
+                            if (String(customerValue || '') !== String(filter.value || '')) {
+                                match = false;
+                                break;
+                            }
+                        }
+                    }
+                    else {
                         if (String(customerValue || '') !== String(filter.value || '')) {
                             match = false;
                             break;
@@ -1611,9 +1699,24 @@
             }
 
             const modemStatusCounts = {};
-            filteredCustomers.forEach(customer => {
-                const modemStatus = customer.MODEM_STATUS || 'Tidak Diketahui';
-                modemStatusCounts[modemStatus] = (modemStatusCounts[modemStatus] || 0) + 1;
+            const PROMO_MODEM_CODES = ['MODEMPROMO25', 'MODEMWIFIPROMO'];
+            const MODEM_DIPINJAMKAN_LABEL = 'MODEM DIPINJAMKAN';
+
+            allCustomers.forEach(customer => {
+                let status = (customer.MODEM_STATUS || 'Tidak Diketahui').toUpperCase();
+                const promoCode = (customer.PROMO_CODE || '').toUpperCase();
+
+                // If promo code matches, categorize as "MODEM DIPINJAMKAN"
+                if (PROMO_MODEM_CODES.includes(promoCode)) {
+                    status = MODEM_DIPINJAMKAN_LABEL;
+                } else if (status === 'RENT') {
+                    // Ensure 'RENT' is only counted if not covered by a promo code
+                    // This handles cases where MODEM_STATUS is 'RENT' but not a promo
+                    status = 'RENT';
+                }
+                // Other statuses remain as they are or as 'Tidak Diketahui'
+
+                modemStatusCounts[status] = (modemStatusCounts[status] || 0) + 1;
             });
 
             const labels = Object.keys(modemStatusCounts);
@@ -1688,10 +1791,18 @@
                         if (elements.length > 0) {
                             const firstElement = elements[0];
                             const dataIndex = firstElement.index;
-                            const clickedModemStatus = labels[dataIndex];
+                            const clickedModemStatusLabel = labels[dataIndex];
 
-                            const filters = [{ column: 'MODEM_STATUS', value: clickedModemStatus }];
-                            const title = `Customer dengan Status Modem: ${clickedModemStatus}`;
+                            let filters = [];
+                            if (clickedModemStatusLabel === MODEM_DIPINJAMKAN_LABEL) {
+                                filters = [{ column: 'MODEM_STATUS_PROMO', value: MODEM_DIPINJAMKAN_LABEL }];
+                            } else if (clickedModemStatusLabel === 'RENT') {
+                                filters = [{ column: 'MODEM_STATUS_PROMO', value: 'RENT' }];
+                            }
+                            else {
+                                filters = [{ column: 'MODEM_STATUS', value: clickedModemStatusLabel }];
+                            }
+                            const title = `Customer dengan Status Modem: ${clickedModemStatusLabel}`;
                             showDetailedCustomersInModal(filters, title);
                         }
                     }
